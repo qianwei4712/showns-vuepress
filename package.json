@@ -1,0 +1,24 @@
+{
+  "name": "showns-vuepress",
+  "version": "1.0.0",
+  "description": "vuepress搭建 · 学习笔记 · 知识汇总。Java SE基础知识：集合、并发、JVM，以及其他小知识梳理。服务器、框架使用，小功能实现记录；在线工具链接汇总。",
+  "main": "index.js",
+  "scripts": {
+    "docs:dev": "vuepress dev docs"
+  },
+  "keywords": [
+    "路的尽头在哪",
+    "宁波白板信息科技"
+  ],
+  "author": "shiva",
+  "repository": {
+    "type": "gitee",
+    "url": "https://gitee.com/qianwei4712/showns-vuepress"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@vuepress/client": "2.0.0-beta.67",
+    "vue": "^3.3.4",
+    "vuepress": "2.0.0-beta.67"
+  }
+}
