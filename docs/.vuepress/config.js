@@ -321,6 +321,67 @@ export default defineUserConfig({
                     ],
                 }
             ],
+            '/deploy/': [
+                {
+                    text: '服务器',
+                    children: [
+                        {
+                            text: '常用软件安装', link: '/deploy/server/CommonSoftwareDeploy.html',
+                        }, {
+                            text: 'Linux 常用命令', link: '/deploy/server/LinuxCommonCommand.html',
+                        }, {
+                            text: 'nginx 域名转发并配置SSL证书', link: '/deploy/server/NginxBindPortWithDomain.html',
+                        }, {
+                            text: 'docker 安装及基本用法', link: '/deploy/server/DockerInstall.html',
+                        }, {
+                            text: 'docker-compose 使用方法', link: '/deploy/server/DockerCompose.html',
+                        },
+                    ],
+                }, {
+                    text: '设计与方法论',
+                    children: [
+                        {
+                            text: '常用详解:正则表达式', link: '/deploy/designpattern/RegularExpression.html',
+                        }, {
+                            text: '开发安全:Web 常见攻击详解', link: '/deploy/designpattern/WebAttackSafe.html',
+                        }, {
+                            text: '开发安全:Web 应用常见测试', link: '/deploy/designpattern/WebSafeTest.html',
+                        }, {
+                            text: '创建型模式', link: '/deploy/designpattern/CreationMode.html',
+                        }, {
+                            text: '结构型模式', link: '/deploy/designpattern/StructuralMode.html',
+                        }, {
+                            text: '行为型模式', link: '/deploy/designpattern/BehavioralMode.html',
+                        }
+                    ],
+                }, {
+                    text: '算法与数据结构',
+                    children: [
+                        {
+                            text: '到底什么是 Hash', link: '/deploy/structure/WhatisHash.html',
+                        }, {
+                            text: '各类常用树的介绍', link: '/deploy/structure/TreeAndCommons.html',
+                        }, {
+                            text: '数据结构 - 堆(Heap)', link: '/deploy/structure/WhatisHeap.html',
+                        }, {
+                            text: '操作系统中heap和stack的区别', link: '/deploy/structure/HeapAndStack.html',
+                        }, {
+                            text: '排序算法', link: '/deploy/structure/SortingAlgorithm.html',
+                        },
+                    ],
+                }, {
+                    text: '散记',
+                    children: [
+                        {
+                            text: '发在语雀不配单独提出来', link: '/deploy/fqa/SomethingNotes.html',
+                        }, {
+                            text: 'GET 和 POST 的真正区别', link: '/deploy/fqa/CompareGetPsot.html',
+                        }, {
+                            text: '在线电子书、下载链接', link: '/deploy/fqa/EbookOnline.html',
+                        }
+                    ],
+                }
+            ],
         },
 
     }),
