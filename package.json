@@ -4,7 +4,8 @@
   "description": "vuepress搭建 · 学习笔记 · 知识汇总。Java SE基础知识：集合、并发、JVM，以及其他小知识梳理。服务器、框架使用，小功能实现记录；在线工具链接汇总。",
   "main": "index.js",
   "scripts": {
-    "docs:dev": "vuepress dev docs"
+    "docs:dev": "vuepress dev docs",
+    "docs:build": "vuepress build docs"
   },
   "keywords": [
     "路的尽头在哪",

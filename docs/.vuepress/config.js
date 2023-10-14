@@ -1,6 +1,5 @@
 import { defineUserConfig, defaultTheme } from 'vuepress'
 
-
 export default defineUserConfig({
     //插件添加
     plugins: [
@@ -40,57 +39,53 @@ export default defineUserConfig({
                 text: 'Spring',
                 children: [
                     {
-                        text: 'Spring 基础', link: '/java/oopbase/Java8NewChara.html',
+                        text: 'Spring 基础', link: '/spring/base/IoCAndDI.html',
                     },
                     {
-                        text: 'Spring Boot', link: '/java/collections/CollectionRelationDiagram.html',
+                        text: 'Spring Boot', link: '/spring/boot/LogbackIntegre.html',
                     },
                     {
-                        text: 'Spring cloud', link: '/java/iokonwledge/IoBaseKonwledge.html',
+                        text: 'Spring cloud', link: '/spring/cloud/eurekaDemo.html',
                     },
                     {
-                        text: 'Spring FQA', link: '/java/thread/ThreadTheoryBase.html',
+                        text: 'Spring FQA', link: '/spring/fqa/VersionSelect.html',
                     },
                 ],
             }, {
                 text: '应用',
                 children: [
                     {
-                        text: '框架', link: '/java/oopbase/Java8NewChara.html',
+                        text: '框架', link: '/apply/frame/MysqlPrinciple.html',
                     },
                     {
-                        text: '中间件', link: '/java/collections/CollectionRelationDiagram.html',
+                        text: '中间件', link: '/apply/middleware/NginxLoadBalancing.html',
                     },
                     {
-                        text: '工具', link: '/java/iokonwledge/IoBaseKonwledge.html',
+                        text: '工具', link: '/apply/tool/MysqldumpBackupSql.html',
                     },
                     {
-                        text: '散记', link: '/java/fqa/OldBoysThoughts.html',
+                        text: '散记', link: '/apply/fqa/SomethingNotes.html',
                     },
                 ],
             }, {
                 text: '攻城狮',
                 children: [
                     {
-                        text: '服务器', link: '/java/oopbase/Java8NewChara.html',
+                        text: '服务器', link: '/deploy/server/CommonSoftwareDeploy.html',
                     },
                     {
-                        text: '设计与方法论', link: '/java/collections/CollectionRelationDiagram.html',
+                        text: '设计与方法论', link: '/deploy/designpattern/RegularExpression.html',
                     },
                     {
-                        text: '算法与数据结构', link: '/java/iokonwledge/IoBaseKonwledge.html',
+                        text: '算法与数据结构', link: '/deploy/structure/WhatisHash.html',
                     },
                     {
-                        text: '散记', link: '/java/fqa/OldBoysThoughts.html',
+                        text: '散记', link: '/deploy/fqa/SomethingNotes.html',
                     },
                 ],
             }, {
                 text: '百宝箱',
-                children: [
-                    {
-                        text: 'Java面向对象基础', link: '/java/oopbase/Java8NewChara.html',
-                    }
-                ],
+                link: '/'
             },
         ],
 
@@ -217,7 +212,115 @@ export default defineUserConfig({
                         }
                     ],
                 }
-            ]
+            ],
+            '/spring/': [
+                {
+                    text: 'Spring 基础',
+                    children: [
+                        {
+                            text: 'Spring 架构介绍及本地搭建', link: '/spring/base/ArchitectureIntro.html',
+                        }, {
+                            text: '控制反转(IoC)、依赖注入(DI)', link: '/spring/base/IoCAndDI.html',
+                        }, {
+                            text: 'Bean 管理，创建、注入方式', link: '/spring/base/BeanConfigoure.html',
+                        }, {
+                            text: 'Spring AOP 切面实现与原理', link: '/spring/base/SpringAspect.html',
+                        },
+                    ],
+                }, {
+                    text: 'Spring Boot',
+                    children: [
+                        {
+                            text: 'SpringBoot - logback 日志配置', link: '/spring/boot/LogbackIntegre.html',
+                        }, {
+                            text: 'SpringBoot - activeMQ 消息队列', link: '/spring/boot/ActiveMqIntegre.html',
+                        },
+                    ],
+                }, {
+                    text: 'Spring cloud',
+                    children: [
+                        {
+                            text: 'Cloud - eureka 注册中心', link: '/spring/cloud/eurekaDemo.html',
+                        }, {
+                            text: 'Cloud - ribbon 负载均衡', link: '/spring/cloud/RibbonDemo.html',
+                        }, {
+                            text: 'Cloud - OpenFegin 注册服务调用', link: '/spring/cloud/OpenFegin.html',
+                        }, {
+                            text: 'Cloud - hystrix 熔断、降级', link: '/spring/cloud/HystrixDemo.html',
+                        }, {
+                            text: 'Cloud - gateway 网关服务', link: '/spring/cloud/GatewayDemo.html',
+                        }
+                    ],
+                }, {
+                    text: 'FQA',
+                    children: [
+                        {
+                            text: 'SpringCloud 版本及对应关系', link: '/spring/fqa/VersionSelect.html',
+                        }, {
+                            text: '发在语雀不配单独提出来', link: '/spring/fqa/SomethingNotes.html',
+                        }
+                    ],
+                }
+            ],
+            '/apply/': [
+                {
+                    text: '框架',
+                    children: [
+                        {
+                            text: 'Database - MySQL 原理深入简介', link: '/apply/frame/MysqlPrinciple.html',
+                        }, {
+                            text: 'JWT - 无状态身份认证令牌', link: '/apply/frame/JwtPrinciple.html',
+                        }, {
+                            text: 'Mybatis-Plus 多数据源', link: '/apply/frame/MybatisPlusDbs.html',
+                        }, {
+                            text: 'Quartz - 任务调度框架整合使用', link: '/apply/frame/QuartzBaseApply.html',
+                        }, {
+                            text: 'Activiti - Workflow 最佳实战案例', link: '/apply/frame/Activiti7Workflow.html',
+                        },
+                    ],
+                }, {
+                    text: '中间件',
+                    children: [
+                        {
+                            text: 'Nginx 负载均衡及双机主从模式', link: '/apply/middleware/NginxLoadBalancing.html',
+                        }, {
+                            text: 'Tomcat 8 参数配置性能优化', link: '/apply/middleware/TomcatOptimize.html',
+                        }, {
+                            text: 'MQ 的作用及主流 MQ 对比', link: '/apply/middleware/MqCompare.html',
+                        }, {
+                            text: 'RabbitMQ - 安装及基础使用', link: '/apply/middleware/RabbitMqBase.html',
+                        }, {
+                            text: 'RabbitMQ - 死信队列、延迟队列', link: '/apply/middleware/RabbitMqHighClass.html',
+                        }, {
+                            text: 'Redis 缓存 - 常见配置与应用案例', link: '/apply/middleware/RedisStudy.html',
+                        }
+                    ],
+                }, {
+                    text: '工具',
+                    children: [
+                        {
+                            text: '使用mysqldump定时备份sql', link: '/apply/tool/MysqldumpBackupSql.html',
+                        }, {
+                            text: 'Jenkins、Gitee 自动化部署', link: '/apply/tool/JenkinsGiteeNpmBuild.html',
+                        }, {
+                            text: 'Jenkins、Dockerfile 容器部署', link: '/apply/tool/JenkinsMavenDockerfile.html',
+                        },
+                    ],
+                }, {
+                    text: '散记',
+                    children: [
+                        {
+                            text: '发在语雀不配单独提出来', link: '/apply/fqa/SomethingNotes.html',
+                        }, {
+                            text: 'Dubbo3 + Zookeeper 基础案例', link: '/apply/fqa/DubboZookeeperFirst.html',
+                        }, {
+                            text: '使用 Explain 进行 SQL 分析', link: '/apply/fqa/ExplainKeyColumn.html',
+                        }, {
+                            text: 'Docker、Gitea、Mysql 企业仓库', link: '/apply/fqa/DockerGiteaMysql.html',
+                        }
+                    ],
+                }
+            ],
         },
 
     }),
