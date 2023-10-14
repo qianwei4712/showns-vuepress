@@ -1,0 +1,816 @@
+<template><div><div class="catalog">
+<ul>
+<li><a href="#%E5%89%8D%E8%A8%80">前言</a></li>
+<li><a href="#CLH%E9%98%9F%E5%88%97">CLH 队列</a></li>
+<li><a href="#AQS%E6%BA%90%E7%A0%81">AQS 源码</a>
+<ul>
+<li><a href="#%E5%AD%97%E6%AE%B5%E5%B1%9E%E6%80%A7">字段属性</a></li>
+<li><a href="#%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95">主要方法</a></li>
+</ul>
+</li>
+<li><a href="#%E7%8B%AC%E5%8D%A0/%E5%85%B1%E4%BA%AB%E6%A8%A1%E5%BC%8F">独占/共享模式</a></li>
+<li><a href="#ReentrantLock">ReentrantLock 独占模式</a>
+<ul>
+<li><a href="#lock%E8%8E%B7%E5%BE%97%E9%94%81">lock 获得锁</a></li>
+<li><a href="#%E5%A4%B1%E8%B4%A5%E8%BF%9B%E5%85%A5%E9%98%9F%E5%88%97">失败进入队列</a></li>
+<li><a href="#%E9%98%9F%E5%88%97%E8%8A%82%E7%82%B9%E8%AF%B7%E6%B1%82%E9%94%81">队列节点请求锁</a></li>
+<li><a href="#unlock%E9%87%8A%E6%94%BE%E9%94%81">unlock 释放锁</a></li>
+</ul>
+</li>
+<li><a href="#CountDownLatch">CountDownLatch 共享模式</a>
+<ul>
+<li><a href="#%E4%B8%BB%E7%BA%BF%E7%A8%8Bawait">主线程 await</a></li>
+<li><a href="#%E4%B8%BB%E7%BA%BF%E7%A8%8B%E9%98%BB%E5%A1%9E%E7%AD%89%E5%BE%85">主线程阻塞等待</a></li>
+<li><a href="#countDown%E9%87%8A%E6%94%BE%E9%94%81">countDown 释放锁</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0">参考文章</a></li>
+</ul>
+</div>
+<h2 id="前言" tabindex="-1"><a class="header-anchor" href="#前言" aria-hidden="true">#</a> <span id="前言">前言</span></h2>
+<p><em>2021.12.02 说实话，AQS 确实没了解过</em> ，阅读 Java 版本为 <strong>1.8.0.25</strong>。</p>
+<ul>
+<li>源码：
+<ul>
+<li><a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/master/src/main/java/java/util/concurrent/locks/AbstractQueuedSynchronizer.java" target="_blank" rel="noopener noreferrer">AbstractQueuedSynchronizer.java - Gitee.com<ExternalLinkIcon/></a></li>
+<li><a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/3f92b4eec860628a343b044ef2ea22abf296b352/src/main/java/java/util/concurrent/locks/ReentrantLock.java" target="_blank" rel="noopener noreferrer">ReentrantLock.java - Gitee.com<ExternalLinkIcon/></a></li>
+<li><a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/3f92b4eec860628a343b044ef2ea22abf296b352/src/main/java/java/util/concurrent/CountDownLatch.java" target="_blank" rel="noopener noreferrer">CountDownLatch.java - Gitee.com<ExternalLinkIcon/></a></li>
+</ul>
+</li>
+<li>中文文档：<a href="https://www.matools.com/api/java8" target="_blank" rel="noopener noreferrer">Java 8 中文版 - 在线API中文手册 - 码工具 (matools.com)<ExternalLinkIcon/></a></li>
+</ul>
+<p>AbstractQueuedSynchronizer 翻译过来是：<strong>抽象队列同步器</strong></p>
+<blockquote>
+<p>AQS 是用来构建 锁 或者 其他同步器组件的 基础框架。通过内置的 <strong>FIFO 双向队列</strong>，来完成资源获取线程的排队工作，并通过一个 <strong>int 类型变量</strong> 表示持有锁的状态。</p>
+</blockquote>
+<p>AQS 解决了 实现同步器时涉及当的大量细节问题，例如：获取同步状态、FIFO同步队列。它不仅能够极大地减少实现工作，而且也不必处理在多个位置上发生的竞争问题。</p>
+<p>在基于 AQS 构建的同步器中，只能在一个时刻发生阻塞，从而降低上下文切换的开销，提高了吞吐量。</p>
+<p>常见的 AQS 应用 API 类包括：<code v-pre>ReentrantLock</code> 、<code v-pre>ReentrantReadWriteLock</code> 、<code v-pre>CountDownLatch</code> 、<code v-pre>Semaphore</code></p>
+<p>因为 AQS 是 Abstract 抽象类，一些方法都是空的，所以后面会根据 ReentrantLock 举例。</p>
+<br/>
+<h2 id="clh-队列" tabindex="-1"><a class="header-anchor" href="#clh-队列" aria-hidden="true">#</a> <span id="CLH队列">CLH 队列</span></h2>
+<p>AQS 主要依靠 <strong>CLH队列的变体</strong> 来实现队列阻塞、等待、唤醒机制，保证锁的分配功能。CLH 队列将暂时获取不到锁的线程加入到队列中，这个队列就是 AQS 的抽象表现。</p>
+<blockquote>
+<p>CLH 将请求共享资源的线程封装成队列的节点，通过 CAS、自旋锁 以及 LockSupport.park() 的方式，维护 state 变量的状态，使并发达到同步控制的效果。</p>
+</blockquote>
+<p>效果图如下：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/721070-20170504110246211-10684485.png" alt=""></p>
+<p><strong>在 AQS 中，基础单元是由 Thread 封装的 Node 节点。</strong></p>
+<p>内部类 Node 节点代码：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">Node</span> <span class="token punctuation">{</span>
+        <span class="token comment">// 模式，分为共享与独占</span>
+        <span class="token comment">// 节点在共享模式下等待的标记</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">SHARED</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 独占模式</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">EXCLUSIVE</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// 结点状态</span>
+        <span class="token comment">// CANCELLED，值为1，表示当前的线程被取消</span>
+        <span class="token comment">// SIGNAL，值为-1，表示当前节点的后继节点包含的线程需要运行，也就是unpark</span>
+        <span class="token comment">// CONDITION，值为-2，表示当前节点在等待condition，也就是在condition队列中</span>
+        <span class="token comment">// PROPAGATE，值为-3，表示当前场景下后续的acquireShared能够得以执行</span>
+        <span class="token comment">// 值为0，表示当前节点在sync队列中，等待着获取锁</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">CANCELLED</span> <span class="token operator">=</span>  <span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">SIGNAL</span>    <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">CONDITION</span> <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">2</span><span class="token punctuation">;</span>
+        <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">int</span> <span class="token constant">PROPAGATE</span> <span class="token operator">=</span> <span class="token operator">-</span><span class="token number">3</span><span class="token punctuation">;</span>
+
+        <span class="token comment">// 当前节点线程.在构造时初始化并在使用后置空.</span>
+        <span class="token keyword">volatile</span> <span class="token class-name">Thread</span> thread<span class="token punctuation">;</span>
+        <span class="token comment">// 上一个节点</span>
+        <span class="token keyword">volatile</span> <span class="token class-name">Node</span> prev<span class="token punctuation">;</span>
+        <span class="token comment">// 下一个节点</span>
+        <span class="token keyword">volatile</span> <span class="token class-name">Node</span> next<span class="token punctuation">;</span>
+
+        <span class="token comment">// 结点状态</span>
+        <span class="token keyword">volatile</span> <span class="token keyword">int</span> waitStatus<span class="token punctuation">;</span>
+        <span class="token comment">// 下一个等待者</span>
+        <span class="token class-name">Node</span> nextWaiter<span class="token punctuation">;</span>
+
+        <span class="token doc-comment comment">/**
+         * 如果节点在共享模式下等待，则返回 true。
+         */</span>
+        <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">isShared</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> nextWaiter <span class="token operator">==</span> <span class="token constant">SHARED</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// 前驱结点不为空，返回</span>
+        <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token function">predecessor</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">NullPointerException</span> <span class="token punctuation">{</span>
+            <span class="token comment">// 保存前驱结点</span>
+            <span class="token class-name">Node</span> p <span class="token operator">=</span> prev<span class="token punctuation">;</span>
+            <span class="token comment">// 前驱结点为空，抛出异常</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>p <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">NullPointerException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">else</span> <span class="token comment">// 前驱结点不为空，返回</span>
+                <span class="token keyword">return</span> p<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// 用于建立初始头部或共享标记</span>
+        <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span>
+
+        <span class="token comment">// 用来添加等待线程节点</span>
+        <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token class-name">Thread</span> thread<span class="token punctuation">,</span> <span class="token class-name">Node</span> mode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>nextWaiter <span class="token operator">=</span> mode<span class="token punctuation">;</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>thread <span class="token operator">=</span> thread<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token class-name">Thread</span> thread<span class="token punctuation">,</span> <span class="token keyword">int</span> waitStatus<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// Used by Condition</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>waitStatus <span class="token operator">=</span> waitStatus<span class="token punctuation">;</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>thread <span class="token operator">=</span> thread<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>很常规的内部节点类，可以看到是一个双向链表。入队出队无非就是指针的移动，全部略过。</p>
+<p>和 AQS 相关的也就是一个模式和等待状态，下面再讲。</p>
+<br/>
+<h2 id="aqs-源码" tabindex="-1"><a class="header-anchor" href="#aqs-源码" aria-hidden="true">#</a> <span id="AQS源码">AQS 源码</span></h2>
+<h3 id="字段属性" tabindex="-1"><a class="header-anchor" href="#字段属性" aria-hidden="true">#</a> <span id="字段属性">字段属性</span></h3>
+<p>AQS 的基础属性包括：队列链表的指针、锁状态属性、以及 CAS 相关。</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 队列头指针。只能通过set方法修改。
+     * 如果 head 存在，则保证其 waitStatus 不会被 CANCELLED
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">transient</span> <span class="token keyword">volatile</span> <span class="token class-name">Node</span> head<span class="token punctuation">;</span>
+    <span class="token doc-comment comment">/**
+     * 队列尾指针。只能通过添加新节点
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">transient</span> <span class="token keyword">volatile</span> <span class="token class-name">Node</span> tail<span class="token punctuation">;</span>
+    <span class="token doc-comment comment">/**
+     * 共享变量，使用volatile修饰保证线程可见性
+     */</span>
+    <span class="token keyword">private</span> <span class="token keyword">volatile</span> <span class="token keyword">int</span> state<span class="token punctuation">;</span>
+    <span class="token doc-comment comment">/**
+     * 自旋时间
+     * The number of nanoseconds for which it is faster to spin rather than to use timed park.
+     * A rough estimate suffices to improve responsiveness with very short timeouts.
+     */</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> spinForTimeoutThreshold <span class="token operator">=</span> <span class="token number">1000L</span><span class="token punctuation">;</span>
+
+    <span class="token doc-comment comment">/**
+     * Setup to support compareAndSet. We need to natively implement
+     * this here: For the sake of permitting future enhancements, we
+     * cannot explicitly subclass AtomicInteger, which would be
+     * efficient and useful otherwise. So, as the lesser of evils, we
+     * natively implement using hotspot intrinsics API. And while we
+     * are at it, we do the same for other CASable fields (which could
+     * otherwise be done with atomic field updaters).
+     */</span>
+    <span class="token comment">// Unsafe类实例</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Unsafe</span> unsafe <span class="token operator">=</span> <span class="token class-name">Unsafe</span><span class="token punctuation">.</span><span class="token function">getUnsafe</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// Unsafe类实例</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> stateOffset<span class="token punctuation">;</span>
+    <span class="token comment">// head内存偏移地址</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> headOffset<span class="token punctuation">;</span>
+    <span class="token comment">// head内存偏移地址</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> tailOffset<span class="token punctuation">;</span>
+    <span class="token comment">// tail内存偏移地址</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> waitStatusOffset<span class="token punctuation">;</span>
+    <span class="token comment">// tail内存偏移地址</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> nextOffset<span class="token punctuation">;</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211205143057176-16386858903311.png" alt=""></p>
+<h3 id="主要方法" tabindex="-1"><a class="header-anchor" href="#主要方法" aria-hidden="true">#</a> <span id="主要方法">主要方法</span></h3>
+<p>AQS 就一个无参构造方法</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 创建一个初始同步状态为零的新的 AbstractQueuedSynchronizer实例。
+     */</span>
+    <span class="token keyword">protected</span> <span class="token class-name">AbstractQueuedSynchronizer</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>那么根据字段，刚创建的 AQS ：<strong>默认 state = 0、head / tail 为 null</strong></p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/82077ccf14127a87b77cefd1ccf562d3253591.png" alt=""></p>
+<p>AQS 主要提供了如下一些方法，先混个脸熟：</p>
+<ul>
+<li><code v-pre>getState()</code>：返回同步状态的当前值；</li>
+<li><code v-pre>setState(int newState)</code>：设置当前同步状态；</li>
+<li><code v-pre>compareAndSetState(int expect, int update)</code>：使用 CAS 设置当前状态，该方法能够保证状态设置的原子性；</li>
+<li><code v-pre>tryAcquire(int arg)</code>：独占式获取同步状态，获取同步状态成功后，其他线程需要等待该线程释放同步状态才能获取同步状态；</li>
+<li><code v-pre>tryRelease(int arg)</code>：独占式释放同步状态；</li>
+<li><code v-pre>tryAcquireShared(int arg)</code>：共享式获取同步状态，返回值大于等于0则表示获取成功，否则获取失败；</li>
+<li><code v-pre>tryReleaseShared(int arg)</code>：共享式释放同步状态；</li>
+<li><code v-pre>isHeldExclusively()</code>：当前同步器是否在独占式模式下被线程占用，一般该方法表示是否被当前线程所独占；</li>
+<li><code v-pre>acquire(int arg)</code>：独占式获取同步状态，如果当前线程获取同步状态成功，则由该方法返回，否则，将会进入同步队列等待，该方法将会调用可重写的tryAcquire(int arg)方法；</li>
+<li><code v-pre>acquireInterruptibly(int arg)</code>：与acquire(int arg)相同，但是该方法响应中断，当前线程为获取到同步状态而进入到同步队列中，如果当前线程被中断，则该方法会抛出InterruptedException异常并返回；</li>
+<li><code v-pre>tryAcquireNanos(int arg,long nanos)</code>：超时获取同步状态，如果当前线程在nanos时间内没有获取到同步状态，那么将会返回false，已经获取则返回true；</li>
+<li><code v-pre>acquireShared(int arg)</code>：共享式获取同步状态，如果当前线程未获取到同步状态，将会进入同步队列等待，与独占式的主要区别是在同一时刻可以有多个线程获取到同步状态；</li>
+<li><code v-pre>acquireSharedInterruptibly(int arg)</code>：共享式获取同步状态，响应中断；</li>
+<li><code v-pre>tryAcquireSharedNanos(int arg, long nanosTimeout)</code>：共享式获取同步状态，增加超时限制；</li>
+<li><code v-pre>release(int arg)</code>：独占式释放同步状态，该方法会在释放同步状态之后，将同步队列中第一个节点包含的线程唤醒；</li>
+<li><code v-pre>releaseShared(int arg)</code>：共享式释放同步状态；</li>
+</ul>
+<br/>
+<h2 id="独占-共享模式" tabindex="-1"><a class="header-anchor" href="#独占-共享模式" aria-hidden="true">#</a> <span id="独占/共享模式">独占/共享模式</span></h2>
+<p>AQS提供了两种工作模式：独占(exclusive)模式 和 共享(shared)模式。</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">class</span> <span class="token class-name">Node</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 模式，分为共享与独占</span>
+    <span class="token comment">// 节点在共享模式下等待的标记</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">SHARED</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 独占模式</span>
+    <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">Node</span> <span class="token constant">EXCLUSIVE</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><ul>
+<li><strong>独占模式： 同一时间只有一个线程能拿到锁执行，锁的状态只有0和1两种情况。</strong></li>
+<li><strong>共享模式： 同一时间有多个线程可以拿到锁协同工作，锁的状态大于或等于0。</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">独占模式</th>
+<th style="text-align:center">共享模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">tryAcquire(int arg)</td>
+<td style="text-align:center">tryAcquireShared(int arg)</td>
+</tr>
+<tr>
+<td style="text-align:center">acquire(int arg)</td>
+<td style="text-align:center">acquireShared(int arg)</td>
+</tr>
+<tr>
+<td style="text-align:center">acquireQueued(final Node node, int arg)</td>
+<td style="text-align:center">doAcquireShared(int arg)</td>
+</tr>
+<tr>
+<td style="text-align:center">tryRelease(int arg)</td>
+<td style="text-align:center">tryReleaseShared(int arg)</td>
+</tr>
+<tr>
+<td style="text-align:center">release(int arg)</td>
+<td style="text-align:center">releaseShared(int arg)</td>
+</tr>
+</tbody>
+</table>
+<br/>
+<h2 id="reentrantlock-独占模式" tabindex="-1"><a class="header-anchor" href="#reentrantlock-独占模式" aria-hidden="true">#</a> <span id="ReentrantLock">ReentrantLock 独占模式</span></h2>
+<blockquote>
+<p><strong>ReentrantLock 内部聚合了一个 AQS 的实现类 Sync，并通过 Sync 实现了线程同步管理</strong></p>
+</blockquote>
+<p>因为 AQS 是作为基础设施，所以比较抽象，所以通过 ReentrantLock 的实际应用场景来说明 AQS 的独占模式。</p>
+<p>ReentrantLock 基础使用代码：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">class</span> <span class="token class-name">ReentrantLockTest</span> <span class="token punctuation">{</span>
+
+    <span class="token comment">//初始化选择公平锁、非公平锁</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">Lock</span> lock <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ReentrantLock</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">//两个线程同时启动</span>
+        <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token class-name">ReentrantLockTest</span><span class="token operator">::</span><span class="token function">run</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token class-name">ReentrantLockTest</span><span class="token operator">::</span><span class="token function">run</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">run</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        lock<span class="token punctuation">.</span><span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            <span class="token comment">//业务代码.....</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+            lock<span class="token punctuation">.</span><span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>ReentrantLock 可以选择公平锁和非公平锁：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code> <span class="token comment">// 构造方法默认为非公平锁</span>
+<span class="token keyword">public</span> <span class="token class-name">ReentrantLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    sync <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">NonfairSync</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token comment">// true 为公平锁，false 为非公平锁</span>
+<span class="token keyword">public</span> <span class="token class-name">ReentrantLock</span><span class="token punctuation">(</span><span class="token keyword">boolean</span> fair<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    sync <span class="token operator">=</span> fair <span class="token operator">?</span> <span class="token keyword">new</span> <span class="token class-name">FairSync</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token keyword">new</span> <span class="token class-name">NonfairSync</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><ul>
+<li>**公平锁：**先到先得，先进入队列排队的线程先获得锁</li>
+<li>**非公平锁（默认）：**所有等待线程都随机抢占锁</li>
+</ul>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211212163744957-16393059900761.png" alt=""></p>
+<p>两者的区别也就是一两个判断方法，他们都是继承自 Sync ，也就是它们都是 AQS 的子类。下面以公平锁为例，逐步深入源码。</p>
+<br/>
+<h3 id="lock-获得锁" tabindex="-1"><a class="header-anchor" href="#lock-获得锁" aria-hidden="true">#</a> <span id="lock获得锁">lock 获得锁</span></h3>
+<p>根据示例运行，第一个执行的是 lock 方法，该源码方法如下，主要看下注解：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 获得锁，Acquires the lock.
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>如果其他线程没有持有锁，则当前线程获取该锁并立即返回，将锁持有计数设置为 1。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>如果当前线程已经持有锁，那么持有计数加一并且该方法立即返回，
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>如果锁被另一个线程持有，那么当前线程将被禁用以进行线程调度并处于休眠状态，直到获得锁为止，此时锁持有计数设置为 1。
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        sync<span class="token punctuation">.</span><span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>sync 则是根据构造方法时确定的锁类型（公平锁、非公平锁），实际调用链路如下：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211212190540209.png" alt=""></p>
+<p>FairSync.lock ：</p>
+<div class="language-sql line-numbers-mode" data-ext="sql"><pre v-pre class="language-sql"><code>final void <span class="token keyword">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> {  acquire<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span> }
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div></div></div><p>再往上调用 AQS 的 acquire 方法，获取锁：</p>
+<div class="language-sql line-numbers-mode" data-ext="sql"><pre v-pre class="language-sql"><code>    <span class="token comment">/**
+     * 以独占模式获取锁，忽略中断。
+     * 通过至少调用一次 {@link #tryAcquire} 实现，成功返回。
+     * 否则线程会排队，可能会反复阻塞和解除阻塞，调用 {@link #tryAcquire} 直到成功。
+     * 该方法可用于实现方法{@link Lock#lock}。
+     *
+     * @param arg 这个值被传送到 {@link #tryAcquire}，但不会被解释，可以代表任何你喜欢的东西。
+     */</span>
+    <span class="token keyword">public</span> final void acquire<span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> {
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>tryAcquire<span class="token punctuation">(</span>arg<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> acquireQueued<span class="token punctuation">(</span>addWaiter<span class="token punctuation">(</span>Node<span class="token punctuation">.</span>EXCLUSIVE<span class="token punctuation">)</span><span class="token punctuation">,</span> arg<span class="token punctuation">)</span><span class="token punctuation">)</span>
+            selfInterrupt<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    }
+    
+    <span class="token comment">/**
+     * 中断当前线程的便捷方法。
+     */</span>
+    static void selfInterrupt<span class="token punctuation">(</span><span class="token punctuation">)</span> {
+        Thread<span class="token punctuation">.</span>currentThread<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>interrupt<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    }
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>看注释文档，可以大概知道，acquire 方法的作用是试图获得锁，失败则进入队列。这个小方法是这样的：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211216224410855.png" alt=""></p>
+<p>然后 AQS.tryAcquire 方法的说明：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 尝试以独占模式获取。该方法应该查询对象的状态是否允许以独占模式获取它，如果允许则获取它。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>此方法始终由执行获取的线程调用。
+     * 如果此方法报告失败，acquire 方法可能会将线程排队，如果它尚未排队，直到收到来自某个其他线程的释放信号。
+     * 这可用于实现方法 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token class-name">Lock</span><span class="token punctuation">#</span><span class="token function">tryLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span></span><span class="token punctuation">}</span>。
+     *
+     * <span class="token keyword">@param</span> <span class="token parameter">arg</span> 该值始终是传递给获取方法的值，或者是在进入条件等待时保存的值。
+     *            该值是未经解释的，可以表示您喜欢的任何内容。
+     * <span class="token keyword">@return</span> <span class="token punctuation">{</span><span class="token keyword">@code</span> <span class="token code-section"><span class="token code language-java"><span class="token boolean">true</span></span></span><span class="token punctuation">}</span> 如果成功。成功后，该对象已获得锁。
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">IllegalMonitorStateException</span></span> 如果获取会将这个同步器置于非法状态。必须以一致的方式抛出此异常，同步才能正常工作。
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">UnsupportedOperationException</span></span> 如果不支持独占模式
+     */</span>
+    <span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">tryAcquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">UnsupportedOperationException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>AQS里是个空方法，在 FairSync 中重写如下：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+  * tryAcquire 的公平版本。
+  * 除非递归调用或没有服务员或是第一个，否则不要授予访问权限。
+  */</span>
+<span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">tryAcquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> acquires<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">//获得当前线程</span>
+    <span class="token keyword">final</span> <span class="token class-name">Thread</span> current <span class="token operator">=</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">//获得当前 AQS.state 状态</span>
+    <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 如果state=0，表示目前没有线程正在占用锁</span>
+        <span class="token comment">// 再做个判断：CAS操作成功 并且 队列中没有线程等待</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">hasQueuedPredecessors</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">compareAndSetState</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> acquires<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment">//设置占用线程为当前线程</span>
+            <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span>current<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>current <span class="token operator">==</span> <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 如果当前线程，就是 AQS独占模式同步的当前所有者</span>
+        <span class="token comment">// 重新设置 AQS.state 的值，一般传入参数是 1，所以 state 都是 +1</span>
+        <span class="token keyword">int</span> nextc <span class="token operator">=</span> c <span class="token operator">+</span> acquires<span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>nextc <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span>
+            <span class="token comment">// 如果超出锁计数，因为 state 是 int 类型，所以重入次数 最多 2^31 -1</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">Error</span><span class="token punctuation">(</span><span class="token string">"Maximum lock count exceeded"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token function">setState</span><span class="token punctuation">(</span>nextc<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">// 除了上面两种拿到锁的情况，其他没拿到锁返回 false</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><blockquote>
+<p><strong>因为是公平锁，需要判断下当前线程前，是否有排队线程；公平锁，先到先得</strong></p>
+</blockquote>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/auwnksnda.jpg" alt=""></p>
+<p>到这里，如果是第一个试图获取锁的线程，已经获得锁了。并且无需进入排队队列。</p>
+<p><code v-pre>if (!tryAcquire(arg) &amp;&amp; acquireQueued(addWaiter(Node.EXCLUSIVE), arg))</code> 判断中， <code v-pre>tryAcquire</code> 返回 true 后，就不再调用 <code v-pre>acquireQueued</code></p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211218235448600.png" alt=""></p>
+<br/>
+<h3 id="失败进入队列" tabindex="-1"><a class="header-anchor" href="#失败进入队列" aria-hidden="true">#</a> <span id="失败进入队列">失败进入队列</span></h3>
+<p>ok，现在第二线程开始调用 lock 方法。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211219142402516.png" alt=""></p>
+<p>这个时候 线程A 依然持有锁，可以确定 <code v-pre>tryAcquire</code> 返回确定为 <strong>false</strong> ，那么就会调用 <code v-pre>acquireQueued</code> 方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">tryAcquire</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">acquireQueued</span><span class="token punctuation">(</span><span class="token function">addWaiter</span><span class="token punctuation">(</span><span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">EXCLUSIVE</span><span class="token punctuation">)</span><span class="token punctuation">,</span> arg<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token function">selfInterrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>先调用 <code v-pre>addWaiter(Node.EXCLUSIVE), arg)</code> ，使用独占模式添加节点：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code> <span class="token doc-comment comment">/**
+   * 为当前线程和给定模式创建和排队节点。
+   * <span class="token keyword">@param</span> <span class="token parameter">mode</span> Node.EXCLUSIVE for exclusive, Node.SHARED for shared
+   * <span class="token keyword">@return</span> the new node
+   */</span>
+<span class="token keyword">private</span> <span class="token class-name">Node</span> <span class="token function">addWaiter</span><span class="token punctuation">(</span><span class="token class-name">Node</span> mode<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">//为当前调用线程，新建节点</span>
+    <span class="token class-name">Node</span> node <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> mode<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token comment">// 试试enq的快速路径;失败时备份到完整的 enq</span>
+    <span class="token class-name">Node</span> pred <span class="token operator">=</span> tail<span class="token punctuation">;</span><span class="token comment">//拿到队列尾</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>pred <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//如果队尾不为空，表示目前队列中有等待线程</span>
+        <span class="token comment">//新节点加入，连接</span>
+        node<span class="token punctuation">.</span>prev <span class="token operator">=</span> pred<span class="token punctuation">;</span>
+        <span class="token comment">//CAS 替换队尾，成功后再返回</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetTail</span><span class="token punctuation">(</span>pred<span class="token punctuation">,</span> node<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            pred<span class="token punctuation">.</span>next <span class="token operator">=</span> node<span class="token punctuation">;</span>
+            <span class="token keyword">return</span> node<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">//没进入 if，然后说明没有等待线程</span>
+    <span class="token function">enq</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> node<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+ <span class="token doc-comment comment">/**
+   * 将节点插入队列，必要时进行初始化。
+   * <span class="token keyword">@param</span> <span class="token parameter">node</span> the node to insert
+   * <span class="token keyword">@return</span> node's predecessor
+   */</span>
+<span class="token keyword">private</span> <span class="token class-name">Node</span> <span class="token function">enq</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token class-name">Node</span> node<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token punctuation">;</span><span class="token punctuation">;</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">Node</span> t <span class="token operator">=</span> tail<span class="token punctuation">;</span><span class="token comment">//拿到队尾</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>t <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// 没有队尾，需要初始化；队尾和队头相同</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetHead</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Node</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                tail <span class="token operator">=</span> head<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span><span class="token comment">// 线程加到最后</span>
+            node<span class="token punctuation">.</span>prev <span class="token operator">=</span> t<span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetTail</span><span class="token punctuation">(</span>t<span class="token punctuation">,</span> node<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                t<span class="token punctuation">.</span>next <span class="token operator">=</span> node<span class="token punctuation">;</span>
+                <span class="token keyword">return</span> t<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>链表队列，队尾加节点倒是没有什么特殊的，不加解释了。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211220225127179.png" alt=""></p>
+<br/>
+<h3 id="队列节点请求锁" tabindex="-1"><a class="header-anchor" href="#队列节点请求锁" aria-hidden="true">#</a> <span id="队列节点请求锁">队列节点请求锁</span></h3>
+<p><strong>公平锁，进入等待状态休息，直到其他线程彻底释放资源后唤醒自己，自己再拿到资源，然后就可以去干自己想干的事了</strong>。</p>
+<p>没错，就是这样！是不是跟医院排队拿号有点相似~~acquireQueued() 就是干这件事：<strong>在等待队列中排队拿号（中间没其它事干可以休息），直到拿到号后再返回</strong>。</p>
+<p>以新线程节点为参数，进入 <code v-pre>acquireQueued</code> 方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+  * 以独占不间断模式获取已在队列中的线程。
+  * 由条件等待方法以及获取使用。
+  * <span class="token keyword">@param</span> <span class="token parameter">node</span> 节点
+  * <span class="token keyword">@param</span> <span class="token parameter">arg</span> the acquire argument
+  * <span class="token keyword">@return</span> <span class="token punctuation">{</span><span class="token keyword">@code</span> <span class="token code-section"><span class="token code language-java"><span class="token boolean">true</span></span></span><span class="token punctuation">}</span> if interrupted while waiting
+  */</span>
+<span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">acquireQueued</span><span class="token punctuation">(</span><span class="token keyword">final</span> <span class="token class-name">Node</span> node<span class="token punctuation">,</span> <span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">boolean</span> failed <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        <span class="token keyword">boolean</span> interrupted <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token punctuation">;</span><span class="token punctuation">;</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment">// 获得当前节点的前驱节点，前驱结点不为空则返回，否则报异常</span>
+            <span class="token comment">// ！！！注意，这一步要么异常、要么返回节点</span>
+            <span class="token keyword">final</span> <span class="token class-name">Node</span> p <span class="token operator">=</span> node<span class="token punctuation">.</span><span class="token function">predecessor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token comment">// ！！！上一个节点是头节点（也就是占位空节点，那么表示当前节点应该是实际意义上的第一个等待线程）</span>
+            <span class="token comment">// ！！！那么，根据公平锁的顺序，第一个等待线程优先尝试获得锁，并且如果获得锁，则进入第一个if</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>p <span class="token operator">==</span> head <span class="token operator">&amp;&amp;</span> <span class="token function">tryAcquire</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token comment">// 那当前线程设置为头节点</span>
+                <span class="token function">setHead</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                p<span class="token punctuation">.</span>next <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span> <span class="token comment">// help GC</span>
+                failed <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                <span class="token comment">// 返回 false，表示不需要被重点</span>
+                <span class="token keyword">return</span> interrupted<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+            <span class="token comment">//如果自己可以休息了，就通过park()进入waiting状态，直到被unpark()。如果不可中断的情况下被中断了，那么会从park()中醒过来，发现拿不到资源，从而继续进入park()等待。</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">shouldParkAfterFailedAcquire</span><span class="token punctuation">(</span>p<span class="token punctuation">,</span> node<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">parkAndCheckInterrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                interrupted <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span><span class="token comment">//如果等待过程中被中断过，哪怕只有那么一次，就将interrupted标记为true</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+        <span class="token comment">//最后在返回之前，当前线程取消试图获取锁</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>failed<span class="token punctuation">)</span> <span class="token function">cancelAcquire</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>工作流程如图（这么多死循环，也不怕耗资源）：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211220233350113.png" alt=""></p>
+<blockquote>
+<ul>
+<li><strong>for 循环不间断试图获取锁，进第一个 if 表示拿到锁了</strong></li>
+<li><strong>第二个 if 则是用于检查 线程节点的状态，比如有的队列节点取消等待，修改优先级等。</strong></li>
+</ul>
+</blockquote>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+ * 检查和更新未能获取的节点的状态。 如果线程应该阻塞，则返回 true。
+ * 这是所有获取循环中的主要信号控制。要求 pred == node.prev。
+ * <span class="token keyword">@param</span> <span class="token parameter">pred</span> 前驱节点
+ * <span class="token keyword">@param</span> <span class="token parameter">node</span> 当前节点
+ * <span class="token keyword">@return</span> 如果当前节点需要被阻塞，那么返回 true
+ */</span>
+<span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">boolean</span> <span class="token function">shouldParkAfterFailedAcquire</span><span class="token punctuation">(</span><span class="token class-name">Node</span> pred<span class="token punctuation">,</span> <span class="token class-name">Node</span> node<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">//获得前驱节点的线程节点状态</span>
+    <span class="token keyword">int</span> ws <span class="token operator">=</span> pred<span class="token punctuation">.</span>waitStatus<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ws <span class="token operator">==</span> <span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">SIGNAL</span><span class="token punctuation">)</span>
+        <span class="token comment">// 这个节点已经设置了状态，要求释放信号，所以它可以安全地停放。</span>
+        <span class="token comment">// SIGNAL，值为-1，表示当前节点的后继节点包含的线程需要运行，也就是unpark</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ws <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">do</span> <span class="token punctuation">{</span>
+            <span class="token comment">// CANCELLED，值为1；前驱节点被取消。跳过前驱并重试。</span>
+            <span class="token comment">//如果前驱放弃了，那就一直往前找，直到找到最近一个正常等待的状态，并排在它的后边。</span>
+            node<span class="token punctuation">.</span>prev <span class="token operator">=</span> pred <span class="token operator">=</span> pred<span class="token punctuation">.</span>prev<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">while</span> <span class="token punctuation">(</span>pred<span class="token punctuation">.</span>waitStatus <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        pred<span class="token punctuation">.</span>next <span class="token operator">=</span> node<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+        <span class="token comment">//如果前驱正常，那就把前驱的状态设置成SIGNAL，告诉它拿完号后通知自己一下。有可能失败，人家说不定刚刚释放完呢！</span>
+        <span class="token function">compareAndSetWaitStatus</span><span class="token punctuation">(</span>pred<span class="token punctuation">,</span> ws<span class="token punctuation">,</span> <span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">SIGNAL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">parkAndCheckInterrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">park</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//调用park()使线程进入waiting状态</span>
+    <span class="token keyword">return</span> <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">interrupted</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//调用park()使线程进入waiting状态</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>这里也有个流程，简单写下：</p>
+<ol>
+<li><strong>第一次循环：进入（空节点.waitStatus = 0 ，Thread B.waitStatus = 0），结束后（空节点.waitStatus = -1，Thread B.waitStatus = 0）</strong></li>
+<li><strong>第二次进入循环：（空节点.waitStatus = -1，Thread B.waitStatus = 0），因为前驱节点状态为 -1，返回 true</strong></li>
+<li><strong>第二次循环返回true，然后进入 parkAndCheckInterrupt 方法，这时候 Thread B 进入 waiting 状态，真正得坐上当朝太子位。</strong></li>
+</ol>
+<p>总算快搞一半了。。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/QQLUQ1222KXENLTWQP5EMD-16400151225781.jpg" alt=""></p>
+<p>当然，在 线程A 持有锁期间，N个线程试图获得锁，变成如图所示：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211221210119733.png" alt=""></p>
+<p>到目前为止，线程B 已经进入 waiting 状态，等待唤醒获得锁了。</p>
+<br/>
+<h3 id="unlock-释放锁" tabindex="-1"><a class="header-anchor" href="#unlock-释放锁" aria-hidden="true">#</a> <span id="unlock释放锁">unlock 释放锁</span></h3>
+<p>那么现在 线程A 完成运行，在 finally 中调用 unlock，先看看 unlock 方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 尝试释放此锁。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>如果当前线程是此锁的持有者，则持有计数递减。如果保持计数现在为零，则释放锁。
+     * 如果当前线程不是此锁的持有者，则抛出 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token class-name">IllegalMonitorStateException</span></span><span class="token punctuation">}</span>。
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">IllegalMonitorStateException</span></span> if the current thread does not hold this lock
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">unlock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        sync<span class="token punctuation">.</span><span class="token function">release</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>注释说得很清楚了，再向上调用：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+  * 独占模式下释放锁。如果 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryRelease</span></span><span class="token punctuation">}</span> 返回 true，通过解除阻塞一个或多个线程来实现。
+  * 这个方法可以用来实现 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token class-name">Lock</span><span class="token punctuation">#</span><span class="token field">unlock</span></span><span class="token punctuation">}</span>.
+  * <span class="token keyword">@param</span> <span class="token parameter">arg</span> 释放锁参数.  这个值被传送到 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryRelease</span></span><span class="token punctuation">}</span> 但没有被解释，可以代表任何你喜欢的东西。
+  * <span class="token keyword">@return</span> the value returned from <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryRelease</span></span><span class="token punctuation">}</span>
+  */</span>
+<span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">release</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryRelease</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//释放锁成功则进入</span>
+        <span class="token class-name">Node</span> h <span class="token operator">=</span> head<span class="token punctuation">;</span>
+        <span class="token comment">//如果链表头不为空，并且状态不是0（表示没有等待线程）</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>h <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> h<span class="token punctuation">.</span>waitStatus <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">)</span>
+            <span class="token comment">//进入方法，唤醒锁</span>
+            <span class="token function">unparkSuccessor</span><span class="token punctuation">(</span>h<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">//释放锁不成功，返回 false</span>
+    <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+ <span class="token comment">// 释放锁方法</span>
+<span class="token keyword">protected</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">tryRelease</span><span class="token punctuation">(</span><span class="token keyword">int</span> releases<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> releases<span class="token punctuation">;</span>
+    <span class="token comment">// 当前线程如果不持有锁，抛出异常</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token function">getExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalMonitorStateException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">boolean</span> free <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span> <span class="token comment">//返回结果默认 false</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//如果 state 减到 0，则进入执行</span>
+        free <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span><span class="token comment">// 释放锁成功</span>
+        <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//将持有锁线程设置为 null</span>
+    <span class="token punctuation">}</span>
+    <span class="token function">setState</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">return</span> free<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>主要流程：</p>
+<ol>
+<li><strong>调用 <code v-pre>tryRelease</code> 尝试释放锁，释放成功后 <code v-pre>state = 0</code> 、持有锁线程为 <code v-pre>null</code></strong></li>
+<li><strong>如果释放成功，判断是否有等待线程，有的话唤醒等待线程。</strong></li>
+</ol>
+<p>然后调用 unparkSuccessor 方法唤醒：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+  * 唤醒节点的后继节点（如果存在）。
+  * <span class="token keyword">@param</span> <span class="token parameter">node</span> the node
+  */</span>
+<span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">unparkSuccessor</span><span class="token punctuation">(</span><span class="token class-name">Node</span> node<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 如果状态是负数(也就是signal=-1)，尝试清除预期的信号</span>
+    <span class="token comment">// 如果此操作失败或等待线程更改状态，也不影响</span>
+    <span class="token keyword">int</span> ws <span class="token operator">=</span> node<span class="token punctuation">.</span>waitStatus<span class="token punctuation">;</span>
+    <span class="token comment">//置零当前线程所在的结点状态，允许失败。</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>ws <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token function">compareAndSetWaitStatus</span><span class="token punctuation">(</span>node<span class="token punctuation">,</span> ws<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">//找到下一个需要唤醒的结点s</span>
+    <span class="token class-name">Node</span> s <span class="token operator">=</span> node<span class="token punctuation">.</span>next<span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>s <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> s<span class="token punctuation">.</span>waitStatus <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//如果为空或已取消</span>
+        s <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+        <span class="token comment">//啰里啰唆的也不看了，反正是寻找下一个需要唤醒的线程</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">Node</span> t <span class="token operator">=</span> tail<span class="token punctuation">;</span> t <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">&amp;&amp;</span> t <span class="token operator">!=</span> node<span class="token punctuation">;</span> t <span class="token operator">=</span> t<span class="token punctuation">.</span>prev<span class="token punctuation">)</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>t<span class="token punctuation">.</span>waitStatus <span class="token operator">&lt;=</span> <span class="token number">0</span><span class="token punctuation">)</span> s <span class="token operator">=</span> t<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">//找到后唤醒</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>s <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token class-name">LockSupport</span><span class="token punctuation">.</span><span class="token function">unpark</span><span class="token punctuation">(</span>s<span class="token punctuation">.</span>thread<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>到了这一步，发生了几件事：</p>
+<ul>
+<li>线程锁已经释放，state 已经变为 0</li>
+<li>head 节点的 waitStatus 已经置为 0，head.next.waitStatus 已经唤醒</li>
+</ul>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211221210657099.png" alt=""></p>
+<p>好嘞，现在线程B 被唤醒，那么在唤醒之前 线程B 的状态呢？</p>
+<blockquote>
+<p><strong>回顾下上面，可以发现 线程B 还在 acquireQueued 死循环中。</strong></p>
+</blockquote>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211221211321696.png" alt=""></p>
+<p><strong>这时候就会成功获得锁，并且设置为头节点（作为占位空节点）。</strong></p>
+<p>到这里就结束了 <code v-pre>lock</code> 、<code v-pre>unlock</code> 方法流程。</p>
+<br/>
+<h3 id="与非公平锁区别" tabindex="-1"><a class="header-anchor" href="#与非公平锁区别" aria-hidden="true">#</a> 与非公平锁区别</h3>
+<p>ReentrantLock 的公平锁和非公平锁在锁获取方式上存在区别。</p>
+<p><strong>lock 方法，先进行 CAS 操作，成功后表示占到线程。没抢到则进入队列抢占线程</strong></p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">lock</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetState</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token function">setExclusiveOwnerThread</span><span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">currentThread</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">else</span>
+        <span class="token function">acquire</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>tryAcquire 方法也一样，先进行 CAS，就不展示代码了。</p>
+<br/>
+<h2 id="countdownlatch-共享模式" tabindex="-1"><a class="header-anchor" href="#countdownlatch-共享模式" aria-hidden="true">#</a> <span id="CountDownLatch">CountDownLatch 共享模式</span></h2>
+<blockquote>
+<p><strong>和 ReentrantLock 不同，CountDownLatch 通过内部聚合的 Sync，实现的是 AQS 的共享模式</strong></p>
+</blockquote>
+<p>最常用见的 CountDownLatch 例子：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">InterruptedException</span> <span class="token punctuation">{</span>
+    <span class="token comment">//计数器，判断线程是否执行结束</span>
+    <span class="token class-name">CountDownLatch</span> taskLatch <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CountDownLatch</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span> i <span class="token operator">&lt;</span> <span class="token number">10</span><span class="token punctuation">;</span> i<span class="token operator">++</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">new</span> <span class="token class-name">Thread</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-></span> <span class="token punctuation">{</span>
+            <span class="token keyword">try</span> <span class="token punctuation">{</span>
+                <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Double</span><span class="token punctuation">(</span><span class="token class-name">Math</span><span class="token punctuation">.</span><span class="token function">random</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token number">10000</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">longValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                taskLatch<span class="token punctuation">.</span><span class="token function">countDown</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"当前计数器数量："</span> <span class="token operator">+</span> taskLatch<span class="token punctuation">.</span><span class="token function">getCount</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">//当前线程阻塞，等待计数器置为0</span>
+    taskLatch<span class="token punctuation">.</span><span class="token function">await</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"主线程等待结束：全部执行完毕"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>因为 AQS 的代码差不多，共享模式就解释下关键代码。</p>
+<p>首先是构造方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token doc-comment comment">/**
+  * 构造一个以给定计数 CountDownLatch CountDownLatch。
+  * <span class="token keyword">@param</span> <span class="token parameter">count</span> count -的次数 countDown()必须调用之前线程可以通过 await()
+  */</span>
+<span class="token keyword">public</span> <span class="token class-name">CountDownLatch</span><span class="token punctuation">(</span><span class="token keyword">int</span> count<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>count <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"count &lt; 0"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">this</span><span class="token punctuation">.</span>sync <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Sync</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token class-name">Sync</span><span class="token punctuation">(</span><span class="token keyword">int</span> count<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">setState</span><span class="token punctuation">(</span>count<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>可见本例子中，构造的默认后 state 已经设置为 10。</p>
+<br/>
+<h3 id="主线程-await" tabindex="-1"><a class="header-anchor" href="#主线程-await" aria-hidden="true">#</a> <span id="主线程await">主线程 await</span></h3>
+<p>10个任务线程进入 sleep，主线程先到达 await 方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 导致当前线程等到锁存器计数到零，除非线程是interrupted 。<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 如果当前计数为零，则此方法立即返回。<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 如果当前计数大于零，则当前线程将被禁用以进行线程调度，并处于休眠状态，直至发生两件事情之一：<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 1. 由于countDown()方法的调用，计数达到零;<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 2. 一些其他线程interrupts当前线程。<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     *
+     * 如果当前线程：<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 1. 在进入该方法时设置了中断状态;<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 2. 是interrupted等待<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     * 然后InterruptedException被关上，当前线程的中断状态被清除。 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+     *
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">InterruptedException</span></span> 如果当前线程在等待时中断
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">await</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">InterruptedException</span> <span class="token punctuation">{</span>
+        sync<span class="token punctuation">.</span><span class="token function">acquireSharedInterruptibly</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>然后这里又进到 AQS，又开始了。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211221233439110.png" alt=""></p>
+<blockquote>
+<p><strong>与 <code v-pre>acquireSharedInterruptibly</code> 对应还有一个 <code v-pre>acquireShared</code> 方法，区别就是是否忽略中断。</strong></p>
+</blockquote>
+<p>这里我们介绍 CountDownLatch 对应的方法：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 在共享模式下尝试，如果中断则中止。
+     * 通过首先检查中断状态来实现，然后至少调用一次 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryAcquireShared</span></span><span class="token punctuation">}</span>，成功返回。
+     * 否则线程会排队，可能会重复阻塞和解除阻塞，调用 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryAcquireShared</span></span><span class="token punctuation">}</span> 直到成功或线程被中断。
+     * <span class="token keyword">@param</span> <span class="token parameter">arg</span> the acquire argument.
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">InterruptedException</span></span> 如果线程中断，则抛出异常
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">void</span> <span class="token function">acquireSharedInterruptibly</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">InterruptedException</span> <span class="token punctuation">{</span>
+        <span class="token comment">//如果线程中断，则抛出异常</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">interrupted</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">InterruptedException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">//尝试共享模式下获得锁，返回负数时，进入方法</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryAcquireShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">0</span><span class="token punctuation">)</span>
+            <span class="token function">doAcquireSharedInterruptibly</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 尝试以共享模式获取。
+     * 该方法应该查询对象的状态是否允许在共享模式下获取该对象，如果是这样，就可以获取它。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>该方法总是由执行获取的线程调用。
+     * 如果此方法报告失败，则获取方法可能将线程排队（如果尚未排队），直到被其他线程释放为止。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>默认实现抛出 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token class-name">UnsupportedOperationException</span></span><span class="token punctuation">}</span>.
+     *
+     * <span class="token keyword">@param</span> <span class="token parameter">arg</span> 获取的论据。 该值始终是传递给获取方法的值，或者是进入条件等待时保存的值。 该值否则无法解释，可以代表您喜欢的任何内容。
+     * <span class="token keyword">@return</span> 失败的时候返回负值。如果在共享模式下获取成功但没有后续共享模式获取可以成功，则为零;
+     * 如果以共享模式获取成功并且随后的共享模式获取可能成功，则为正值，在这种情况下，后续等待线程必须检查可用性。
+     * （支持三种不同的返回值使得这种方法可以在仅获取有时只能完全执行的上下文中使用。）成功后，该对象已被获取。
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">IllegalMonitorStateException</span></span> 如果获取将该同步器置于非法状态。 必须以一致的方式抛出此异常，以使同步正常工作
+     * <span class="token keyword">@throws</span> <span class="token reference"><span class="token class-name">UnsupportedOperationException</span></span> 如果不支持共享模式
+     */</span>
+    <span class="token keyword">protected</span> <span class="token keyword">int</span> <span class="token function">tryAcquireShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">UnsupportedOperationException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>AQS 共享模式做的 <code v-pre>tryAcquireShared</code> 顶层设计有官方解释，然后看 CountDownLatch 重写：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code> <span class="token comment">// 试图在共享模式下获取对象状态</span>
+<span class="token keyword">protected</span> <span class="token keyword">int</span> <span class="token function">tryAcquireShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> acquires<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">return</span> <span class="token punctuation">(</span><span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">?</span> <span class="token number">1</span> <span class="token operator">:</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>如果 AQS.state 状态为 0 时，返回正值。所以这里有个小流程：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211221235248132.png" alt=""></p>
+<p>所以，现在流到了 doAcquireSharedInterruptibly 方法。</p>
+<br/>
+<h3 id="主线程阻塞等待" tabindex="-1"><a class="header-anchor" href="#主线程阻塞等待" aria-hidden="true">#</a> <span id="主线程阻塞等待">主线程阻塞等待</span></h3>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/QQ图片20210605155149-16401826011861.jpg" alt=""></p>
+<p>然后就开始了找茬，和 <code v-pre>acquireQueued</code> 类似，直接看代码：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">doAcquireSharedInterruptibly</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">InterruptedException</span> <span class="token punctuation">{</span>
+    <span class="token keyword">final</span> <span class="token class-name">Node</span> node <span class="token operator">=</span> <span class="token function">addWaiter</span><span class="token punctuation">(</span><span class="token class-name">Node</span><span class="token punctuation">.</span><span class="token constant">SHARED</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//队尾加入共享节点</span>
+    <span class="token keyword">boolean</span> failed <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span><span class="token comment">//是否成功标志</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token punctuation">;</span><span class="token punctuation">;</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token comment">//拿到共享节点的上一个节点，也就是队尾的上一个节点</span>
+            <span class="token keyword">final</span> <span class="token class-name">Node</span> p <span class="token operator">=</span> node<span class="token punctuation">.</span><span class="token function">predecessor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>p <span class="token operator">==</span> head<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token comment">//如果到head的下一个，因为head是拿到资源的线程，此时node被唤醒，很可能是head用完资源来唤醒自己的</span>
+                <span class="token keyword">int</span> r <span class="token operator">=</span> <span class="token function">tryAcquireShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//尝试获取资源</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>r <span class="token operator">>=</span> <span class="token number">0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//成功</span>
+                    <span class="token comment">//将head指向自己，还有剩余资源可以再唤醒之后的线程</span>
+                    <span class="token function">setHeadAndPropagate</span><span class="token punctuation">(</span>node<span class="token punctuation">,</span> r<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    p<span class="token punctuation">.</span>next <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span> <span class="token comment">// help GC</span>
+                    failed <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+                    <span class="token keyword">return</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+            <span class="token comment">//判断状态，寻找安全点，进入waiting状态，等着被unpark()或interrupt()</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">shouldParkAfterFailedAcquire</span><span class="token punctuation">(</span>p<span class="token punctuation">,</span> node<span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token function">parkAndCheckInterrupt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">InterruptedException</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>failed<span class="token punctuation">)</span>
+            <span class="token function">cancelAcquire</span><span class="token punctuation">(</span>node<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><blockquote>
+<p><strong>区别就是： 只有阻塞队列中的第一个节点（除了 head 占位节点），才会去试图获取锁。</strong></p>
+</blockquote>
+<p>直接看图吧：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211222224927763.png" alt=""></p>
+<br/>
+<h3 id="countdown-释放锁" tabindex="-1"><a class="header-anchor" href="#countdown-释放锁" aria-hidden="true">#</a> <span id="countDown释放锁">countDown 释放锁</span></h3>
+<p>任务线程执行完毕减计数：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code>    <span class="token doc-comment comment">/**
+     * 减少锁存器的计数，如果计数达到零，释放所有等待的线程。
+     * 如果当前计数大于零，则它将递减。 如果新计数为零，则所有等待的线程都将被重新启用以进行线程调度。
+     * <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>如果当前计数等于零，那么没有任何反应。
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">countDown</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        sync<span class="token punctuation">.</span><span class="token function">releaseShared</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>  
+    <span class="token doc-comment comment">/**
+     * 共享模式运行. 如果 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryReleaseShared</span></span><span class="token punctuation">}</span> 返回 true，则通过解除阻塞一个或多个线程来实现。
+     * <span class="token keyword">@param</span> <span class="token parameter">arg</span> 释放参数。arg会被传到<span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryReleaseShared</span></span><span class="token punctuation">}</span>，但是这个方法是抽象方法，可能代表任何东西
+     * <span class="token keyword">@return</span> 从 <span class="token punctuation">{</span><span class="token keyword">@link</span> <span class="token reference"><span class="token punctuation">#</span><span class="token field">tryReleaseShared</span></span><span class="token punctuation">}</span> 返回的值
+     */</span>
+    <span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token keyword">boolean</span> <span class="token function">releaseShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> arg<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">tryReleaseShared</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token comment">//尝试释放锁</span>
+            <span class="token function">doReleaseShared</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">//执行释放锁</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><code v-pre>tryReleaseShared</code> 方法代码和流程如图：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token comment">// 试图设置状态来反映共享模式下的一个释放</span>
+<span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">tryReleaseShared</span><span class="token punctuation">(</span><span class="token keyword">int</span> releases<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Decrement count; signal when transition to zero</span>
+    <span class="token comment">// 无限循环</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token punctuation">;</span><span class="token punctuation">;</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// 获取状态</span>
+        <span class="token keyword">int</span> c <span class="token operator">=</span> <span class="token function">getState</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 没有被线程占有</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>c <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+        <span class="token comment">// 下一个状态</span>
+        <span class="token keyword">int</span> nextc <span class="token operator">=</span> c<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token comment">// CAS操作：比较并且设置成功</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">compareAndSetState</span><span class="token punctuation">(</span>c<span class="token punctuation">,</span> nextc<span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span> nextc <span class="token operator">==</span> <span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211222224841063.png" alt=""></p>
+<p>后面都差不多，不贴代码了，图也懒的画了，最后唤醒和独占模式一个样。</p>
+<br/>
+<h2 id="参考文章" tabindex="-1"><a class="header-anchor" href="#参考文章" aria-hidden="true">#</a> <span id="参考文章">参考文章</span></h2>
+<ul>
+<li><a href="https://www.pdai.tech/md/java/thread/java-thread-x-lock-AbstractQueuedSynchronizer.html" target="_blank" rel="noopener noreferrer">JUC锁: 锁核心类AQS详解 | Java 全栈知识体系 (pdai.tech)<ExternalLinkIcon/></a></li>
+<li><a href="https://www.bilibili.com/video/BV1Hy4y1B78T?p=16" target="_blank" rel="noopener noreferrer">尚硅谷Java大厂面试题第3季，跳槽必刷题目+必扫技术盲点（周阳主讲）_哔哩哔哩_bilibili<ExternalLinkIcon/></a></li>
+<li>[<a href="https://www.cmsblogs.com/article/1391297814356692992" target="_blank" rel="noopener noreferrer">死磕 Java 并发] --- J.U.C之AQS：AQS简介 - Java 技术驿站 (cmsblogs.com)<ExternalLinkIcon/></a></li>
+<li><a href="https://www.bilibili.com/video/BV1Zz4y197iF?from=search&amp;seid=2258786188377475040&amp;spm_id_from=333.337.0.0" target="_blank" rel="noopener noreferrer">透彻分析AQS源码，差点被按在地上摩擦_哔哩哔哩_bilibili<ExternalLinkIcon/></a></li>
+<li><a href="https://www.cnblogs.com/waterystone/p/4920797.html" target="_blank" rel="noopener noreferrer">Java并发之AQS详解 - waterystone - 博客园 (cnblogs.com)<ExternalLinkIcon/></a></li>
+<li><a href="http://ifeve.com/java-special-troops-aqs/" target="_blank" rel="noopener noreferrer">AQS的原理浅析 | 并发编程网 – ifeve.com<ExternalLinkIcon/></a></li>
+<li><a href="https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html" target="_blank" rel="noopener noreferrer">从ReentrantLock的实现看AQS的原理及应用 - 美团技术团队 (meituan.com)<ExternalLinkIcon/></a></li>
+<li><a href="https://blog.csdn.net/weixin_43823391/article/details/114259447" target="_blank" rel="noopener noreferrer">AQS之独占模式和共享模式_开发笔记的博客-CSDN博客_共享模式和独占模式<ExternalLinkIcon/></a></li>
+</ul>
+</div></template>
+
+

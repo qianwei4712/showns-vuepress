@@ -1,0 +1,305 @@
+<template><div><div class="catalog">
+<ul>
+<li><a href="#t0">前言</a></li>
+<li><a href="#t1">认证发展历程</a>
+<ul>
+<li><a href="#t11">session+cookie</a></li>
+<li><a href="#t12">Token 机制</a></li>
+<li><a href="#t13">JWT 认证</a></li>
+</ul>
+</li>
+<li><a href="#t2">重新认识 JWT</a>
+<ul>
+<li><a href="#t21">JWT 结构</a></li>
+<li><a href="#t22">JWT 优势</a></li>
+<li><a href="#t23">JWT 缺陷</a></li>
+</ul>
+</li>
+<li><a href="#t3">JWT 认证架构设计</a></li>
+<li><a href="#t4">代码示例</a></li>
+<li><a href="#t5">注解切面认证</a></li>
+<li><a href="#te">参考文章</a></li>
+</ul>
+</div>
+<h2 id="前言" tabindex="-1"><a class="header-anchor" href="#前言" aria-hidden="true">#</a> <span id="t0">前言</span></h2>
+<p><code v-pre>2021.11.11</code></p>
+<ul>
+<li>官网地址：<a href="https://jwt.io/introduction/" target="_blank" rel="noopener noreferrer">https://jwt.io/introduction/<ExternalLinkIcon/></a></li>
+<li>测试 Demo 地址：<a href="https://gitee.com/learning-use-cases/demo4j-of-first/tree/master/jwt-unit" target="_blank" rel="noopener noreferrer">jwt-unit · Learning Use Cases/Demo4j of First - 码云<ExternalLinkIcon/></a></li>
+</ul>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211111212052896.png" alt="image-20211111212052896"></p>
+<blockquote>
+<p>JSON Web 令牌（JWT）是一个开放式标准（RFC 7519），它定义了一种紧凑且自成一体的方式，用于将各方之间的信息安全传输为 JSON 对象。</p>
+<p>此信息可以验证和信任，因为它是数字签名的。JWT 可以使用秘密（使用 <strong>HMAC</strong> 算法）或使用 <strong>RSA</strong> 或 <strong>ECDSA</strong> 的公/私密密钥对进行签名。</p>
+</blockquote>
+<p>说人话，就是通过 JSON 形式作为 Web 应用中的令牌，用于在各方之间安全地将信息作为 JSON 对象传输。在数据传输过程中还可以完成数据加密、签名等相关处理。</p>
+<hr>
+<p>官网的介绍中，JWT 的使用场景为：</p>
+<ul>
+<li><strong>授权</strong>： 这是使用 JWT 最常见的方案。登录后，每个后续请求都将包括 JWT，允许用户访问该令牌允许的路线、服务和资源。单签名是当今广泛使用的 JWT 功能，因为它的开销很小，并且能够轻松地跨不同域使用。</li>
+<li><strong>信息交换</strong>：JSON网络代币是各方安全传递信息的好方法。例如，因为 JWT 可以签名，因此使用公共/私人密钥对，您可以确定发送者就是他们所说的他们是谁。此外，由于签名是使用头和有效载荷计算的，您还可以验证内容是否未被篡改。</li>
+</ul>
+<br/>
+<h2 id="认证发展历程" tabindex="-1"><a class="header-anchor" href="#认证发展历程" aria-hidden="true">#</a> <span id="t1">认证发展历程</span></h2>
+<h3 id="session-cookie" tabindex="-1"><a class="header-anchor" href="#session-cookie" aria-hidden="true">#</a> <span id="t11">Session+Cookie</span></h3>
+<p>借用一下以上的的图片，因为 HTTP 是无状态请求，所以每一次请求都是全新的。</p>
+<p>所以在早期，身份认证需要使用 Cookie + Session，客户端、服务端两个信息认证。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/20200624091112221.png" alt="在这里插入图片描述"></p>
+<p>在 web 应用早期，单体应用中可以满足使用。但是随着 web 体系发展，也有许多缺点：</p>
+<ul>
+<li>session 保存在内存或者缓存中，每次请求都需要认证 session ，增大服务器压力</li>
+<li>服务扩展困难，session 需要集中管理，在分布式系统上存在先天缺陷</li>
+<li>因为是基于 cookie 来进行用户识别的, cookie如果被截获，用户就会很容易受到跨站请求伪造的攻击</li>
+</ul>
+<br/>
+<h3 id="token-机制" tabindex="-1"><a class="header-anchor" href="#token-机制" aria-hidden="true">#</a> <span id="t12">Token 机制</span></h3>
+<p>颁发 Token 最开始的使用流程可以看下图。</p>
+<p>在刚开始，我们创建的 Token 都是 UUID，并保存到数据库，是一种比较粗糙的方式。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211111220342658.png" alt="image-20211111220342658"></p>
+<p>当然上述流程依然会有许多的优化操作，例如：</p>
+<ul>
+<li>token 保存到缓存，提高读取速度</li>
+<li>客户端将 token 保存到 cookie 中，每次请求自动携带</li>
+<li>服务端在拦截器中进行验证，全局配置</li>
+</ul>
+<hr>
+<p>这种 token 机制，对比传统 session 对移动端和分布式系统更加友好，存在以下优点：</p>
+<ul>
+<li><strong>支持跨域访问</strong>：<code v-pre>cookie</code>是无法跨域的，而<code v-pre>token</code>由于没有用到<code v-pre>cookie</code>(前提是将<code v-pre>token</code>放到请求头中)，所以跨域后不会存在信息丢失问题</li>
+<li><strong>无状态</strong>：<code v-pre>token</code>机制在服务端不需要存储<code v-pre>session</code>信息，因为token自身包含了所有登录用户的信息，所以可以减轻服务端压力</li>
+<li><strong>更适用CDN</strong>：可以通过内容分发网络请求服务端的所有资料</li>
+<li><strong>更适用于移动端</strong>：当客户端是非浏览器平台时，<code v-pre>cookie</code>是不被支持的，此时采用<code v-pre>token</code>认证方式会简单很多</li>
+<li><strong>无需考虑CSRF</strong>：由于不再依赖<code v-pre>cookie</code>，所以采用token认证方式不会发生 CSRF，所以也就无需考虑 CSRF 的防御</li>
+</ul>
+<br/>
+<h3 id="jwt-认证" tabindex="-1"><a class="header-anchor" href="#jwt-认证" aria-hidden="true">#</a> <span id="t13">JWT 认证</span></h3>
+<blockquote>
+<p><strong>JWT 作为 Token 的一种实现方式，非常彻底得贯彻了无状态请求的理念，甚至有点矫枉过正。</strong></p>
+</blockquote>
+<p>主要实现流程如下：</p>
+<ol>
+<li>与上述相同，客户端登录，服务端对账号密码进行验证。</li>
+<li>验证通过后，服务端将 <strong>用户的ID或者其他信息作为 JWT Payload（负载）</strong>，<strong>将其与头部分别进行 Base6 4编码拼接后签名，形成一个JWT(Token)</strong>。</li>
+<li>服务端将 JWT 字符串返回，客户端退出时删除 JWT。</li>
+<li>服务端每次 <strong>请求时将 JWT 放入 HTTP Header 中的 Authorization 位。</strong> (解决XSS和XSRF问题)</li>
+<li>服务端检查 JWT 是否存在，是否正确、是否过期</li>
+</ol>
+<p>其实和 Token 机制没有太大的区别。</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/SJ4S5W1CAW511CS5.jpg" alt=""></p>
+<br/>
+<h2 id="重新认识-jwt" tabindex="-1"><a class="header-anchor" href="#重新认识-jwt" aria-hidden="true">#</a> <span id="t2">重新认识 JWT</span></h2>
+<p>仔细对比 JWT 和 Token 可以发现很多区别。</p>
+<h3 id="jwt-结构" tabindex="-1"><a class="header-anchor" href="#jwt-结构" aria-hidden="true">#</a> <span id="t21">JWT 结构</span></h3>
+<p>在开始之前，先了解 JWT 的结构，JWT 是一串字符串，例如：</p>
+<div class="language-text line-numbers-mode" data-ext="text"><pre v-pre class="language-text"><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.
+eyJpZCI6ICIxMDA4NiIsIm5hbWUiOiAic2hpdmEiLCJyb2xlcyI6IFsiYWRtaW4iLCJ0ZXN0Il0sImxvZ2luVGltZSI6MTYzNjY0NjUxNDAwMCwiZXhwIjozNjAwMDAwfQ==.
+-xN_h82PHVTCMA9vdoHrcZxH-x5mb11y1537t3rGzcM
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>JWT 字符串中有两个点，把字符串分割成三段，如图：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211111231005846.png" alt="image-20211111231005846"></p>
+<h4 id="标头-header" tabindex="-1"><a class="header-anchor" href="#标头-header" aria-hidden="true">#</a> <strong>标头 Header</strong></h4>
+<blockquote>
+<p>header 有两个组成部分：令牌的类型（typ）和所使用的算法（alg），例如：HMAC、SHA256 或 RSA。它会使用 Base64 编码组成 JWT 结构的第一部分。</p>
+</blockquote>
+<p>注意：Base64 是一种编码，也就是说，它是可以被翻译回原来的样子来的。它并不是一种加密过程。</p>
+<p>例如 上面的 JWT 例子中的 Header ，通过解密为：</p>
+<div class="language-json line-numbers-mode" data-ext="json"><pre v-pre class="language-json"><code><span class="token punctuation">{</span><span class="token property">"typ"</span><span class="token operator">:</span><span class="token string">"JWT"</span><span class="token punctuation">,</span><span class="token property">"alg"</span><span class="token operator">:</span><span class="token string">"HS256"</span><span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div></div></div><p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211111232444218.png" alt="image-20211111232444218"></p>
+<h4 id="负载-payload" tabindex="-1"><a class="header-anchor" href="#负载-payload" aria-hidden="true">#</a> <strong>负载 Payload</strong></h4>
+<p>中间部分是负载，我们以前都是生成一个UUID作为令牌返回。但是 JWT 将用户信息直接返回到客户端，就是将信息添加到负载 Payload 上。</p>
+<blockquote>
+<p>负载包含声明。声明是有关实体（通常是用户）和其他数据的声明。同样的，它会使用 Base64 编码组成 JWT 结构的第二部分</p>
+</blockquote>
+<p>官方提醒，负载部分不要加入敏感信息。</p>
+<p>通过在负载部分，我们放的都是一些基础信息，例如：<code v-pre>令牌颁发服务系统</code>、<code v-pre>用户名</code>、<code v-pre>角色</code>、<code v-pre>用户ID</code>、<code v-pre>部门</code>、<code v-pre>企业</code>、<code v-pre>登录过期时间</code> 等。</p>
+<div class="language-json line-numbers-mode" data-ext="json"><pre v-pre class="language-json"><code><span class="token punctuation">{</span>
+  <span class="token property">"id"</span><span class="token operator">:</span> <span class="token string">"10086"</span><span class="token punctuation">,</span>
+  <span class="token property">"name"</span><span class="token operator">:</span> <span class="token string">"shiva"</span><span class="token punctuation">,</span>
+  <span class="token property">"roles"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"admin"</span><span class="token punctuation">,</span><span class="token string">"test"</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">"loginTime"</span><span class="token operator">:</span><span class="token number">1636646514000</span><span class="token punctuation">,</span>
+  <span class="token property">"expire"</span><span class="token operator">:</span><span class="token number">3600000</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><strong>官方标准中注册的声明</strong> (建议但不强制使用) ：</p>
+<ul>
+<li><strong>iss</strong>: jwt签发者</li>
+<li><strong>sub</strong>: jwt所面向的用户</li>
+<li><strong>aud</strong>: 接收jwt的一方</li>
+<li><strong>exp</strong>: jwt的过期时间，这个过期时间必须要大于签发时间</li>
+<li><strong>nbf</strong>: 定义在什么时间之前，该jwt都是不可用的.</li>
+<li><strong>iat</strong>: jwt的签发时间</li>
+<li><strong>jti</strong>: jwt的唯一身份标识，主要用来作为一次性token,从而回避重放攻击。</li>
+</ul>
+<h4 id="验证-singurater" tabindex="-1"><a class="header-anchor" href="#验证-singurater" aria-hidden="true">#</a> <strong>验证 Singurater</strong></h4>
+<p>JWT中，Header 、Payload 都相当于是明文传输。所以，作为身份验证得功能，就在 Singurater 中实现。</p>
+<p>验签字符串得获得方式为：</p>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211113174922936.png" alt=""></p>
+<p>可以很明显看出，加密方式、明文、加密后密文，都已经拿到了。只有一个 密钥secret 是服务端自己保存得。</p>
+<blockquote>
+<p>所以，JWT 作为身份验证，唯一的核心就是这个密钥。这个密钥用于加密、和验证。</p>
+</blockquote>
+<br/>
+<h3 id="jwt-优势" tabindex="-1"><a class="header-anchor" href="#jwt-优势" aria-hidden="true">#</a> <span id="t22">JWT 优势</span></h3>
+<ul>
+<li>简洁(Compact): 可以通过URL，POST参数或者在HTTP header发送，因为数据量小，传输速度也很快</li>
+<li>自包含(Self-contained)：负载中包含了所有用户所需要的信息，避免了多次查询数据库</li>
+<li>因为Token是以JSON加密的形式保存在客户端的，所以JWT是跨语言的，原则上任何 web 形式都支持。</li>
+<li>不需要在服务端保存会话信息，特别适用于分布式微服务。</li>
+<li>最后最后，上手简单，学习成本极低。</li>
+</ul>
+<br/>
+<h3 id="jwt-缺陷" tabindex="-1"><a class="header-anchor" href="#jwt-缺陷" aria-hidden="true">#</a> <span id="t23">JWT 缺陷</span></h3>
+<ul>
+<li>JWT 因为将过期时间留在负载，对一个已颁发的 JWT，<strong>服务端丧失了主动过期的权限，一旦 JWT 泄露，只能等到它过期而别无他法</strong> 。对于部分对主动过期有要求的系统来说不适合用 jwt</li>
+<li>因为负载可以存放数据，通常会不自觉将很多信息加到里面。对比元数据，JWT 采用base64编码，至少是原数据量的 4/3 大小。<strong>会导致 JWT 很长，导致请求 header 比 body 还大</strong> 。而SessionId只是很短的一个字符串，因此使用JWT的Http请求比使用Session的开销大得多。</li>
+<li>根据推荐设计，JWT的过期时间是参与了JWT的签名过程（exp字段），这样会导致按标准实现的JWT token无法续签，因为过期时间是签名的一部分，那就无法续签这个JWT本身，需要分发新的token。</li>
+</ul>
+<blockquote>
+<p>这里总结了 JWT 的设计权限，通常我们会在服务端加入 redis 来做状态存储，以便实现主动过期。</p>
+<p>但是这和 session 又有什么区别，还不如直接用 session 来得开销小。</p>
+</blockquote>
+<br/>
+<h2 id="jwt-认证架构设计" tabindex="-1"><a class="header-anchor" href="#jwt-认证架构设计" aria-hidden="true">#</a> <span id="t3">JWT 认证架构设计</span></h2>
+<p>实际应用中，一般也就两种场景：</p>
+<h3 id="统一认证" tabindex="-1"><a class="header-anchor" href="#统一认证" aria-hidden="true">#</a> <strong>统一认证</strong></h3>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211112222314448.png" alt="image-20211112222314448"></p>
+<ul>
+<li>在应用网关验签后，获取用户信息。</li>
+<li>优点是：可以做到无侵入校验，对验证无感知。</li>
+<li>缺点是：请求、验证都集中在网关，并发压力提高后容易出问题。代码执行效率低，很多不需要验签的请求也会过网关验签。</li>
+</ul>
+<br/>
+<h3 id="独立认证" tabindex="-1"><a class="header-anchor" href="#独立认证" aria-hidden="true">#</a> <strong>独立认证</strong></h3>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211112222236072.png" alt="image-20211112222236072"></p>
+<ul>
+<li>在每个模块，或者控制器来进行验签判断。</li>
+<li>优点是：控制灵活，可以按需进行校验。</li>
+<li>缺点是：需要手动添加代码，提高了问题出现率。</li>
+</ul>
+<br/>
+<h2 id="代码示例" tabindex="-1"><a class="header-anchor" href="#代码示例" aria-hidden="true">#</a> <span id="t4">代码示例</span></h2>
+<p>其实，针对 JWT 这个小应用，应该不需要写什么代码。因为验证逻辑和使用场景都非常明显。</p>
+<p><strong>这里就先做个简单测试，实际应用自行修改，工具类请自行封装、全局配置自行维护</strong></p>
+<p>pom 依赖：</p>
+<div class="language-xml line-numbers-mode" data-ext="xml"><pre v-pre class="language-xml"><code><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>io.jsonwebtoken<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>jjwt<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>0.9.1<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>登录，颁发 jwt ：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code> <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">String</span> <span class="token constant">SECRET</span> <span class="token operator">=</span> <span class="token string">"S@&amp;op@!@.S5!)(@{"</span><span class="token punctuation">;</span>
+
+<span class="token annotation punctuation">@RequestMapping</span><span class="token punctuation">(</span><span class="token string">"login"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token class-name">Result</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> <span class="token function">login</span><span class="token punctuation">(</span><span class="token class-name">String</span> username<span class="token punctuation">,</span> <span class="token class-name">String</span> password<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token string">"admin"</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>username<span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token operator">!</span><span class="token string">"admin"</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>password<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"用户名或密码错误"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token comment">// 准备 负载数据</span>
+    <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">Object</span><span class="token punctuation">></span></span> payload <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    payload<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    payload<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"username"</span><span class="token punctuation">,</span> username<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    payload<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"roles"</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">{</span><span class="token string">"admin"</span><span class="token punctuation">,</span> <span class="token string">"test"</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    payload<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"loginTime"</span><span class="token punctuation">,</span> <span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment">// 组装 JWT 令牌</span>
+    <span class="token class-name">String</span> jwt <span class="token operator">=</span> <span class="token class-name">Jwts</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">setHeaderParam</span><span class="token punctuation">(</span><span class="token string">"typ"</span><span class="token punctuation">,</span> <span class="token string">"JWT"</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">setHeaderParam</span><span class="token punctuation">(</span><span class="token string">"alg"</span><span class="token punctuation">,</span> <span class="token string">"HS256"</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">setClaims</span><span class="token punctuation">(</span>payload<span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">setIssuedAt</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">setExpiration</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token class-name">System</span><span class="token punctuation">.</span><span class="token function">currentTimeMillis</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">30</span> <span class="token operator">*</span> <span class="token number">60</span> <span class="token operator">*</span> <span class="token number">1000</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">signWith</span><span class="token punctuation">(</span><span class="token class-name">SignatureAlgorithm</span><span class="token punctuation">.</span><span class="token constant">HS256</span><span class="token punctuation">,</span> <span class="token constant">SECRET</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">compact</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"登录成功"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">data</span><span class="token punctuation">(</span>jwt<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><blockquote>
+<p><strong>注意：先添加 claims 再添加过期时间！</strong></p>
+</blockquote>
+<p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211113151054896.png" alt="image-20211113151054896"></p>
+<p>验证测试：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token annotation punctuation">@RequestMapping</span><span class="token punctuation">(</span><span class="token string">"confirmJwt"</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token class-name">Result</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> <span class="token function">confirmJwt</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token class-name">String</span> jwt <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span><span class="token string">"Authorization"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        <span class="token comment">// 验证</span>
+        <span class="token class-name">Claims</span> body <span class="token operator">=</span> <span class="token class-name">Jwts</span><span class="token punctuation">.</span><span class="token function">parser</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setSigningKey</span><span class="token punctuation">(</span><span class="token constant">SECRET</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">parseClaimsJws</span><span class="token punctuation">(</span>jwt<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getBody</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>body<span class="token punctuation">.</span><span class="token function">getIssuedAt</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>body<span class="token punctuation">.</span><span class="token function">getExpiration</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span>body<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"roles"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"校验成功"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">data</span><span class="token punctuation">(</span>body<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">ExpiredJwtException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"JWT 过期"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">UnsupportedJwtException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">MalformedJwtException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"非正常 JWT "</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">SignatureException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"JWT签名不匹配"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token class-name">Result</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">code</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">message</span><span class="token punctuation">(</span><span class="token string">"验证出错"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p><img src="https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/images/image-20211113151541870.png" alt="image-20211113151541870"></p>
+<br/>
+<h2 id="注解切面认证" tabindex="-1"><a class="header-anchor" href="#注解切面认证" aria-hidden="true">#</a> <span id="t5">注解切面认证</span></h2>
+<p>实际项目中，肯定是会有方法区分，有的需要认证，有的不需要。就像上面架构设计中的第二个方式。</p>
+<p>现在对需要认证的进行统一方法配置，要做到尽量少代码，现在我们通用的方式是加注解。</p>
+<blockquote>
+<p><strong>主要思路：自定义注解 + 拦截器</strong></p>
+</blockquote>
+<p>下面给个例子。</p>
+<p>添加自定义注解：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token annotation punctuation">@Target</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token class-name">ElementType</span><span class="token punctuation">.</span><span class="token constant">METHOD</span><span class="token punctuation">,</span> <span class="token class-name">ElementType</span><span class="token punctuation">.</span><span class="token constant">TYPE</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Retention</span><span class="token punctuation">(</span><span class="token class-name">RetentionPolicy</span><span class="token punctuation">.</span><span class="token constant">RUNTIME</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Documented</span>
+<span class="token keyword">public</span> <span class="token annotation punctuation">@interface</span> <span class="token class-name">IgnoreJwt</span> <span class="token punctuation">{</span>
+    <span class="token doc-comment comment">/**
+     * 是否忽略 jwt 验证
+     */</span>
+    <span class="token keyword">boolean</span> <span class="token function">ignored</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">default</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><p>添加拦截器：</p>
+<div class="language-java line-numbers-mode" data-ext="java"><pre v-pre class="language-java"><code><span class="token annotation punctuation">@Component</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">AuthorizationInterceptor</span> <span class="token keyword">implements</span> <span class="token class-name">HandlerInterceptor</span> <span class="token punctuation">{</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">preHandle</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span> <span class="token class-name">HttpServletResponse</span> response<span class="token punctuation">,</span> <span class="token class-name">Object</span> handler<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">{</span>
+
+        <span class="token class-name">String</span> jwt <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span><span class="token string">"Authorization"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// 如果不是映射到方法直接通过</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token punctuation">(</span>handler <span class="token keyword">instanceof</span> <span class="token class-name">HandlerMethod</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token class-name">HandlerMethod</span> handlerMethod <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">HandlerMethod</span><span class="token punctuation">)</span> handler<span class="token punctuation">;</span>
+        <span class="token class-name">Method</span> method <span class="token operator">=</span> handlerMethod<span class="token punctuation">.</span><span class="token function">getMethod</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">//检查是否有 IgnoreJwt 注释，有则跳过认证</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>method<span class="token punctuation">.</span><span class="token function">isAnnotationPresent</span><span class="token punctuation">(</span><span class="token class-name">IgnoreJwt</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token class-name">IgnoreJwt</span> ignoreJwt <span class="token operator">=</span> method<span class="token punctuation">.</span><span class="token function">getAnnotation</span><span class="token punctuation">(</span><span class="token class-name">IgnoreJwt</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>ignoreJwt<span class="token punctuation">.</span><span class="token function">ignored</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token comment">// 省略其他验证，直接拿 jwt</span>
+        <span class="token class-name">Claims</span> claims <span class="token operator">=</span> <span class="token class-name">Jwts</span><span class="token punctuation">.</span><span class="token function">parser</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setSigningKey</span><span class="token punctuation">(</span><span class="token string">"S@&amp;op@!@.S5!)(@{"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">parseClaimsJws</span><span class="token punctuation">(</span>jwt<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getBody</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">//放入attribute以便后面调用</span>
+        request<span class="token punctuation">.</span><span class="token function">setAttribute</span><span class="token punctuation">(</span><span class="token string">"claims"</span><span class="token punctuation">,</span> claims<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">return</span> <span class="token class-name">HandlerInterceptor</span><span class="token punctuation">.</span><span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">preHandle</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> handler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div><div class="line-number"></div></div></div><br/>
+<h2 id="参考文章" tabindex="-1"><a class="header-anchor" href="#参考文章" aria-hidden="true">#</a> <span id="te">参考文章</span></h2>
+<p><a href="https://www.bilibili.com/video/BV1i54y1m7cP" target="_blank" rel="noopener noreferrer">【编程不良人】JWT认证原理、流程整合springboot实战应用,前后端分离认证的解决方案!_哔哩哔哩_bilibili<ExternalLinkIcon/></a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/86937325" target="_blank" rel="noopener noreferrer">五分钟带你了解啥是JWT - 知乎 (zhihu.com)<ExternalLinkIcon/></a></p>
+<p><a href="https://www.jianshu.com/p/576dbf44b2ae" target="_blank" rel="noopener noreferrer">什么是 JWT -- JSON WEB TOKEN - 简书 (jianshu.com)<ExternalLinkIcon/></a></p>
+<p><a href="https://www.cnblogs.com/cxxtreasure/p/14173315.html" target="_blank" rel="noopener noreferrer">JWT(JSON Web Token)简介 - 竹林听雨行 - 博客园 (cnblogs.com)<ExternalLinkIcon/></a></p>
+<p><a href="https://www.baobao555.tech/posts/4cc42459/" target="_blank" rel="noopener noreferrer">JWT详解 | 包包的Tech Pool (baobao555.tech)<ExternalLinkIcon/></a></p>
+<p><a href="https://blog.csdn.net/AkiraNicky/article/details/99307713" target="_blank" rel="noopener noreferrer">SpringBoot整合JWT_AkiraNicky的博客-CSDN博客<ExternalLinkIcon/></a></p>
+<p><a href="https://blog.csdn.net/qq_43948583/article/details/104437752" target="_blank" rel="noopener noreferrer">利用Springboot实现Jwt认证_菜鸡的博客-CSDN博客<ExternalLinkIcon/></a></p>
+<p><a href="https://www.bilibili.com/video/BV1C44y1k7VC?spm_id_from=333.999.0.0" target="_blank" rel="noopener noreferrer">【IT老齐024】前后端分离架构下JWT认证该怎么设计？_哔哩哔哩_bilibili<ExternalLinkIcon/></a></p>
+<p><a href="https://www.bilibili.com/video/BV1ov411N7iw?spm_id_from=333.999.0.0" target="_blank" rel="noopener noreferrer">【IT老齐025】无状态的JWT令牌如何实现续签功能？_哔哩哔哩_bilibili<ExternalLinkIcon/></a></p>
+<p><a href="https://blog.csdn.net/qq_43948583/article/details/104437752" target="_blank" rel="noopener noreferrer">利用Springboot实现Jwt认证_菜鸡的博客-CSDN博客<ExternalLinkIcon/></a></p>
+</div></template>
+
+
