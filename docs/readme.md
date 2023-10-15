@@ -5,7 +5,7 @@ heroText:
 
 actions:
   - text: 快速开始→
-    link: /C/
+    link: /chest.html
     type: secondary
 features:
   - title: 基础还是要有的
@@ -14,5 +14,5 @@ features:
     details: 原本我也是用到什么学什么，后来遇到问题就得一遍遍查资料
   - title: 相关信息多了解
     details: 很多知识都是有关系的，涉及内容不会也得有印象
-footer: 浙ICP备18006899号-2 | 浙公网安备 33028302000356号 © 2023-present shiva
+footer: Made with ♥ for the people of the internet © 2023-present shiva
 ---

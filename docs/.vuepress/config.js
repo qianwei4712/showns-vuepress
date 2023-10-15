@@ -9,6 +9,12 @@ export default defineUserConfig({
     title: '路的尽头在哪',
     description: '做人最重要的是开心',
     base: '/showns-vuepress/',
+    head: [
+        [
+            // 设置 favor.ico，.vuepress/public 下
+            'link', { rel: 'icon', href: '/img/favicon.ico' }
+        ]
+    ],
 
     // 默认主题配置
     theme: defaultTheme({
@@ -91,7 +97,6 @@ export default defineUserConfig({
         ],
 
         // 左边侧边栏
-        sidebarDepth: 0,//关闭提取文章标题
         sidebar: {
             '/java/': [
                 {
@@ -384,6 +389,12 @@ export default defineUserConfig({
                 }
             ],
         },
+        //关闭提取文章标题
+        sidebarDepth: 0,
+        //不显示文档贡献者
+        contributors: false,
+        //不显示文档更新时间
+        lastUpdated: false
 
     }),
 

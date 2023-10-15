@@ -1,0 +1,37 @@
+.theme-default-content {
+  /* 设置内容区域的最大宽度 */
+  max-width: 100% !important; 
+
+  //所有图片都居中
+  img {
+    display: block;
+    margin: auto;
+  }
+
+  //悬浮菜单
+  .catalog{
+    position: fixed;
+    z-index: 999;
+    right: 20px;
+    top: 65px;
+    background: rgba(255, 255, 255, 0.7) none repeat scroll 0 0;
+    border-radius: 25px;
+    opacity:0.3;
+    max-height: 70%;
+    overflow-y: scroll;
+  }
+  .catalog::-webkit-scrollbar {
+      display: none;
+  }
+  .catalog:hover{
+      opacity:1;
+      background: rgba(255, 255, 255, 1) none repeat scroll 0 0;
+  }
+  .catalog ul{
+      list-style: none;
+      padding: 0 32px 0 20px;
+  }
+  .catalog a:hover{
+      font-weight: normal;
+  }
+}
