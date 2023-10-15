@@ -8,6 +8,7 @@ export default defineUserConfig({
     lang: 'zh-CN',
     title: '路的尽头在哪',
     description: '做人最重要的是开心',
+    base: '/showns-vuepress/',
 
     // 默认主题配置
     theme: defaultTheme({
