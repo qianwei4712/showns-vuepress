@@ -13,7 +13,7 @@
     position: fixed;
     z-index: 999;
     right: 20px;
-    top: 65px;
+    top: 150px;
     background: rgba(255, 255, 255, 0.7) none repeat scroll 0 0;
     border-radius: 25px;
     opacity:0.3;
@@ -29,7 +29,7 @@
   }
   .catalog ul{
       list-style: none;
-      padding: 0 32px 0 20px;
+      padding: 0 15px 0 15px;
   }
   .catalog a:hover{
       font-weight: normal;
