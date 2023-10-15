@@ -1,1 +1,0 @@
-export const data = JSON.parse("{\"key\":\"v-14c69af4\",\"path\":\"/java/\",\"title\":\"Java\",\"lang\":\"zh-CN\",\"frontmatter\":{\"lang\":\"zh-CN\",\"title\":\"Java\",\"date\":\"2019-10-01T00:00:00.000Z\",\"description\":\"Java 从入门到入土，多年低级程序员的挣扎\",\"sidebar\":\"auto\"},\"headers\":[],\"git\":{},\"filePathRelative\":\"java/readme.md\"}")

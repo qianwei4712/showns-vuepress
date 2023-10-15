@@ -1,1 +1,0 @@
-export const data = JSON.parse("{\"key\":\"v-6616956b\",\"path\":\"/java/jvm/JvmTotalSee.html\",\"title\":\"\",\"lang\":\"zh-CN\",\"frontmatter\":{},\"headers\":[{\"level\":3,\"title\":\"学习材料\",\"slug\":\"学习材料\",\"link\":\"#学习材料\",\"children\":[]}],\"git\":{},\"filePathRelative\":\"java/jvm/JvmTotalSee.md\"}")
