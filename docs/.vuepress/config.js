@@ -1,20 +1,25 @@
 import { defineUserConfig, defaultTheme } from 'vuepress'
+import { registerComponentsPlugin } from '@vuepress/plugin-register-components'
+
+// import { utils, path } from '@vuepress/utils'
+// const __dirname = utils.getDirname(import.meta.url)
 
 export default defineUserConfig({
     //插件添加
     plugins: [
+        //自定义组件注册插件
+        registerComponentsPlugin({
+            // componentsDir: path.resolve(__dirname, './components')
+        })
     ],
     //基础信息配置
     lang: 'zh-CN',
     title: '路的尽头在哪',
     description: '做人最重要的是开心',
     base: '/showns-vuepress/',
-    head: [
-        [
-            // 设置 favor.ico，.vuepress/public 下
-            'link', { rel: 'icon', href: '/img/favicon.ico' }
-        ]
-    ],
+    head: [[
+        'link', { rel: 'icon', href: '/showns-vuepress/img/favicon.ico' }
+    ]],
 
     // 默认主题配置
     theme: defaultTheme({
