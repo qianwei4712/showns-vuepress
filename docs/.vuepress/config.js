@@ -1,5 +1,7 @@
 import { defineUserConfig, defaultTheme } from 'vuepress'
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components'
+import { searchPlugin } from '@vuepress/plugin-search'
+
 
 // import { utils, path } from '@vuepress/utils'
 // const __dirname = utils.getDirname(import.meta.url)
@@ -10,7 +12,9 @@ export default defineUserConfig({
         //自定义组件注册插件
         registerComponentsPlugin({
             // componentsDir: path.resolve(__dirname, './components')
-        })
+        }),
+        // 搜索插件 配置
+        searchPlugin({ maxSuggestions: 8 }),
     ],
     //基础信息配置
     lang: 'zh-CN',
