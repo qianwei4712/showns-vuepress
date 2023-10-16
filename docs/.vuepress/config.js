@@ -2,16 +2,15 @@ import { defineUserConfig, defaultTheme } from 'vuepress'
 import { registerComponentsPlugin } from '@vuepress/plugin-register-components'
 import { searchPlugin } from '@vuepress/plugin-search'
 
-
-// import { utils, path } from '@vuepress/utils'
-// const __dirname = utils.getDirname(import.meta.url)
+import { getDirname, path } from '@vuepress/utils'
+const __dirname = getDirname(import.meta.url)
 
 export default defineUserConfig({
     //插件添加
     plugins: [
         //自定义组件注册插件
         registerComponentsPlugin({
-            // componentsDir: path.resolve(__dirname, './components')
+            componentsDir: path.resolve(__dirname, './components')
         }),
         // 搜索插件 配置
         searchPlugin({ maxSuggestions: 8 }),
@@ -101,7 +100,7 @@ export default defineUserConfig({
                 ],
             }, {
                 text: '百宝箱',
-                link: '/'
+                link: '/chest/'
             },
         ],
 

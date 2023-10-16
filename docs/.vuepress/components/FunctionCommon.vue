@@ -1,0 +1,71 @@
+<template>
+  <div class="functionCommon">
+    <div class="read-only func-item">
+      <el-tag v-for="(single, index) in allFunc" :key="index" size="large" :effect="randomEffect(index)"
+        :type="randomType(index)" @click="experience(single)">
+        {{ single.title }}
+      </el-tag>
+    </div>
+    <el-dialog :title="dialog.title" v-model="dialog.open" top="6vh" :width="dialog.width" append-to-body>
+      <component :is="dialog.currentView"></component>
+    </el-dialog>
+  </div>
+</template>
+  
+<script>
+import coordinateTrans from "./function/coordinateTrans.vue";
+import ApplyCase from "./applyCase.vue";
+//   import coordinatePick from './function/coordinatePick';
+//   import imageCompressor from './function/imageCompressor';
+
+export default {
+  name: "FunctionCommon",
+  components: { coordinateTrans, ApplyCase },
+  data() {
+    return {
+      types: ["", "success", "info", "warning", "danger"],
+      effects: ["dark", "light", "plain"],
+      dialog: {
+        title: "", //弹窗标题
+        open: false,
+        currentView: null, //弹窗内组件
+      },
+      allFunc: [
+        { title: "经纬度坐标系转换", width: "1200px", view: coordinateTrans },
+        { title: "高德地图经纬度拾取", width: "1600px" },
+        { title: "图片压缩", width: "600px" },
+      ],
+    };
+  },
+  methods: {
+    experience(obj) {
+      this.dialog.title = obj.title;
+      this.dialog.width = obj.width;
+      this.dialog.open = true;
+      this.dialog.currentView = obj.view;
+    },
+    randomType(index) {
+      return this.types[index % 4];
+    },
+    randomEffect(index) {
+      return this.effects[index % 3];
+    },
+  },
+};
+</script>
+  
+<style scoped>
+.functionCommon {
+  margin: 25px 0;
+}
+
+.func-item {
+  padding: 0 15px;
+}
+
+.func-item span {
+  cursor: pointer;
+  margin: 5px 20px 5px 0;
+}
+</style>
+  

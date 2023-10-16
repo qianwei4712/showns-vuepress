@@ -5,7 +5,7 @@ heroText:
 
 actions:
   - text: 快速开始→
-    link: /chest/functionCommon.html
+    link: /chest/
     type: secondary
 features:
   - title: 基础还是要有的
