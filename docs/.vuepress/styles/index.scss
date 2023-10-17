@@ -1,6 +1,6 @@
 .theme-default-content {
   /* 设置内容区域的最大宽度 */
-  max-width: 100% !important; 
+  max-width: 100% !important;
 
   //所有图片都居中
   img {
@@ -9,28 +9,28 @@
   }
 
   //悬浮菜单
-  .catalog{
+  .catalog {
     position: fixed;
     z-index: 999;
     right: 20px;
     top: 150px;
     border-radius: 25px;
-    opacity:0.3;
+    opacity: 0.3;
     max-height: 70%;
     overflow-y: scroll;
   }
   .catalog::-webkit-scrollbar {
-      display: none;
+    display: none;
   }
-  .catalog:hover{
-      opacity:1;
-      background: rgba(255, 255, 255, 1) none repeat scroll 0 0;
+  .catalog:hover {
+    opacity: 1;
+    background: var(--c-bg);
   }
-  .catalog ul{
-      list-style: none;
-      padding: 0 15px 0 15px;
+  .catalog ul {
+    list-style: none;
+    padding: 0 15px 0 15px;
   }
-  .catalog a:hover{
-      font-weight: normal;
+  .catalog a:hover {
+    font-weight: normal;
   }
 }
