@@ -14,13 +14,12 @@
   
 <script>
 import coordinateTrans from "./function/coordinateTrans.vue";
-import ApplyCase from "./applyCase.vue";
+import imageCompressor from './function/imageCompressor.vue';
 //   import coordinatePick from './function/coordinatePick';
-//   import imageCompressor from './function/imageCompressor';
 
 export default {
   name: "FunctionCommon",
-  components: { coordinateTrans, ApplyCase },
+  components: { coordinateTrans, imageCompressor },
   data() {
     return {
       types: ["", "success", "info", "warning", "danger"],
@@ -33,7 +32,7 @@ export default {
       allFunc: [
         { title: "经纬度坐标系转换", width: "1200px", view: coordinateTrans },
         { title: "高德地图经纬度拾取", width: "1600px" },
-        { title: "图片压缩", width: "600px" },
+        { title: "图片压缩", width: "600px", view: imageCompressor },
       ],
     };
   },

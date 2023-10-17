@@ -25,7 +25,10 @@
     "vuepress": "2.0.0-beta.67"
   },
   "dependencies": {
+    "@element-plus/icons": "^0.0.11",
     "@vuepress/utils": "2.0.0-beta.67",
-    "element-plus": "^2.4.0"
+    "element-plus": "^2.4.0",
+    "file-saver": "^2.0.5",
+    "js-image-compressor": "^2.0.0"
   }
 }

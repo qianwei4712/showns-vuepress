@@ -1,6 +1,6 @@
 import ElementPlus from 'element-plus'
 import { defineClientConfig } from '@vuepress/client'
-import { ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber, ElForm, ElFormItem, ElRow, ElCol, ElDivider } from "element-plus"
+import { ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber, ElForm, ElFormItem, ElRow, ElCol, ElDivider, ElUpload, ElSwitch } from "element-plus"
 
 export default defineClientConfig({
     enhance({ app }) {
@@ -22,6 +22,8 @@ export default defineClientConfig({
             import("element-plus/es/components/row/style/css");
             import("element-plus/es/components/col/style/css");
             import("element-plus/es/components/divider/style/css");
+            import("element-plus/es/components/upload/style/css");
+            import("element-plus/es/components/switch/style/css");
 
         }
         app.component('el-button', ElButton)
@@ -36,6 +38,7 @@ export default defineClientConfig({
         app.component('el-row', ElRow)
         app.component('el-col', ElCol)
         app.component('el-divider', ElDivider)
-
+        app.component('el-upload', ElUpload)
+        app.component('el-switch', ElSwitch)
     }
 });
