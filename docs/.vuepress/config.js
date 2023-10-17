@@ -101,6 +101,9 @@ export default defineUserConfig({
             }, {
                 text: '百宝箱',
                 link: '/chest/'
+            }, {
+                text: '关于',
+                link: '/about/website/WebsiteIntroduction.html'
             },
         ],
 
@@ -393,6 +396,27 @@ export default defineUserConfig({
                         }, {
                             text: '在线电子书、下载链接', link: '/deploy/fqa/EbookOnline.html',
                         }
+                    ],
+                }
+            ],
+            '/about/': [
+                {
+                    text: '关于 - 本站',
+                    children: [
+                        {
+                            text: '小破站的介绍', link: '/about/website/WebsiteIntroduction.html',
+                        }, {
+                            text: '后续学习和编写的清单', link: '/about/website/SubsequentPlans.html',
+                        },
+                    ],
+                }, {
+                    text: '关于 - 作者',
+                    children: [
+                        {
+                            text: '我的特别鸣谢', link: '/about/author/SpecialThanks.html',
+                        }, {
+                            text: '顺便，给公司打个广告', link: '/about/author/Advertise.html',
+                        },
                     ],
                 }
             ],

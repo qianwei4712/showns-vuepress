@@ -1,6 +1,10 @@
 import ElementPlus from 'element-plus'
 import { defineClientConfig } from '@vuepress/client'
-import { ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber, ElForm, ElFormItem, ElRow, ElCol, ElDivider, ElUpload, ElSwitch } from "element-plus"
+import {
+    ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber,
+    ElForm, ElFormItem, ElRow, ElCol, ElDivider, ElUpload, ElSwitch,
+    ElTimeline, ElTimelineItem, ElCard, ElCheckbox, ElAvatar
+} from "element-plus"
 
 export default defineClientConfig({
     enhance({ app }) {
@@ -24,6 +28,11 @@ export default defineClientConfig({
             import("element-plus/es/components/divider/style/css");
             import("element-plus/es/components/upload/style/css");
             import("element-plus/es/components/switch/style/css");
+            import("element-plus/es/components/timeline/style/css");
+            import("element-plus/es/components/timeline-item/style/css");
+            import("element-plus/es/components/card/style/css");
+            import("element-plus/es/components/checkbox/style/css");
+            import("element-plus/es/components/avatar/style/css");
 
         }
         app.component('el-button', ElButton)
@@ -40,5 +49,11 @@ export default defineClientConfig({
         app.component('el-divider', ElDivider)
         app.component('el-upload', ElUpload)
         app.component('el-switch', ElSwitch)
+        app.component('el-timeline', ElTimeline)
+        app.component('el-timeline-item', ElTimelineItem)
+        app.component('el-card', ElCard)
+        app.component('el-checkbox', ElCheckbox)
+        app.component('el-avatar', ElAvatar)
+
     }
 });
