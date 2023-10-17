@@ -1,3 +1,7 @@
+---
+title: 小破站的介绍
+---
+
 ### 不 996，住进 ICU 哪有钱看病 <span style="color:red">❤</span>
 
 1. 本站使用 vuepress 2 搭建，加入 Element Plus 作为 UI 框架，部署在 Gitee Pages
