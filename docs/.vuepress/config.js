@@ -415,7 +415,7 @@ export default defineUserConfig({
                         {
                             text: '我的特别鸣谢', link: '/about/author/SpecialThanks.html',
                         }, {
-                            text: '顺便，给公司打个广告', link: '/about/author/Advertise.html',
+                            text: '顺便，给自己打个广告', link: '/about/author/Advertise.html',
                         },
                     ],
                 }
