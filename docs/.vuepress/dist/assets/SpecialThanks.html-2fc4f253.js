@@ -1,1 +1,0 @@
-import{_ as c,r as e,o as l,c as o,a as n,w as s}from"./app-c14a8d33.js";const _={};function r(i,p){const t=e("SpecialThanks"),a=e("ClientOnly");return l(),o("div",null,[n(a,null,{default:s(()=>[n(t)]),_:1})])}const f=c(_,[["render",r],["__file","SpecialThanks.html.vue"]]);export{f as default};
