@@ -1,7 +1,7 @@
 ## ![logo](/docs/.vuepress/public/img/favicon.ico) 路的尽头在哪
 
 <span style="font-weight:bold;font-size:18px">
-部署方式Gitee Pages： [路的尽头在哪](https://qianwei4712.gitee.io/showns-vuepress/chest/)
+部署方式Gitee Pages：<a href="https://qianwei4712.gitee.io/showns-vuepress/chest/" target="_blank">路的尽头在哪</a>
 </span>
 
 1. 起因是 2019 受到 **@pdai** 大佬的启发，写了一个简单的静态博客
