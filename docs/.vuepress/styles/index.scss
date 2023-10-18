@@ -8,6 +8,29 @@
     margin: auto;
   }
 
+  // 引用块改为绿色
+  blockquote {
+    color: #282c34;
+    padding: 0.5rem 1rem;
+    border-left: 8px solid #2f845e;
+    background-color: rgba(66, 185, 131, 0.1);
+    border-radius: 4px;
+
+    //引用快立马的行内代码改为橙色
+    code {
+      color: #e96900;
+      margin: 0 2px;
+      padding: 3px 4px 1px;
+      border-radius: 4px;
+    }
+  }
+
+  //加粗文字改颜色
+  strong {
+    background-color: inherit;
+    color: #b5302e;
+  }
+
   //悬浮菜单
   .catalog {
     position: fixed;
