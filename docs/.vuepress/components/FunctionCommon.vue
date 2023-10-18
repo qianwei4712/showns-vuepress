@@ -19,7 +19,6 @@ import coordinatePick from './function/coordinatePick.vue';
 
 export default {
   name: "FunctionCommon",
-  components: { coordinateTrans, imageCompressor },
   data() {
     return {
       types: ["", "success", "info", "warning", "danger"],

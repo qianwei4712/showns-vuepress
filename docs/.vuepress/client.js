@@ -3,7 +3,7 @@ import { defineClientConfig } from '@vuepress/client'
 import {
     ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber,
     ElForm, ElFormItem, ElRow, ElCol, ElDivider, ElUpload, ElSwitch,
-    ElTimeline, ElTimelineItem, ElCard, ElCheckbox, ElAvatar
+    ElTimeline, ElTimelineItem, ElCard, ElCheckbox, ElAvatar, ElPopover
 } from "element-plus"
 
 export default defineClientConfig({
@@ -33,6 +33,7 @@ export default defineClientConfig({
             import("element-plus/es/components/card/style/css");
             import("element-plus/es/components/checkbox/style/css");
             import("element-plus/es/components/avatar/style/css");
+            import("element-plus/es/components/popover/style/css");
 
         }
         app.component('el-button', ElButton)
@@ -54,6 +55,7 @@ export default defineClientConfig({
         app.component('el-card', ElCard)
         app.component('el-checkbox', ElCheckbox)
         app.component('el-avatar', ElAvatar)
+        app.component('el-popover', ElPopover)
 
     }
 });

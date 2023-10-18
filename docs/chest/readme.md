@@ -15,3 +15,7 @@ title: 百宝箱⌨
 </ClientOnly>
 
 <el-divider><span style="color: gray">我是有底线的</span></el-divider>
+
+<ClientOnly>
+  <AppreciateCode/>
+</ClientOnly>
