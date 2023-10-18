@@ -134,7 +134,7 @@ private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
 所以这也是 WeakHashMap 的另一个特点：
 
-<font color="red">**一旦这样的 key 被丢弃，它就永远不会被重新创建，所以不可能在稍后的 WeakHashMap 中查找该 key。**</font>
+<font color="red">一旦这样的 key 被丢弃，它就永远不会被重新创建，所以不可能在稍后的 WeakHashMap 中查找该 key。</font>
 
 <br>
 

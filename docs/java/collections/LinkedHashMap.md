@@ -1,4 +1,3 @@
-
 <div class="catalog">
 
 - [前言](#t0)
@@ -15,23 +14,19 @@
 
 </div>
 
-
-
 ## <span id="t0">前言</span>
 
 阅读 Java 版本为 **1.8.0.25**。
 
 好久没看集合类的源码了，自从看完 Set 类的源码后，就基本结束了这一块。
 
-本来计划是开始阅读 *ConcurrentHashMap* 之前，先把线程安全部分全部学习完。
+本来计划是开始阅读 _ConcurrentHashMap_ 之前，先把线程安全部分全部学习完。
 
 不过昨天在别人的博客中看到了 LinkedHashMap 这个类。我发现我居然从来没见过，那就抽一天看下源码。
 
-LinkedHashMap  源码：<a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/master/src/main/java/java/util/LinkedHashMap.java" target="_blank">https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/master/src/main/java/java/util/LinkedHashMap.java</a>
+LinkedHashMap 源码：<a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/master/src/main/java/java/util/LinkedHashMap.java" target="_blank">https://gitee.com/qianwei4712/JDK1.8.0.25-read/blob/master/src/main/java/java/util/LinkedHashMap.java</a>
 
 ![](http://shiva.oss-cn-hangzhou.aliyuncs.com/emo/XIKOEQKFKLOO3UE00.jpg)
-
-
 
 <br>
 
@@ -39,7 +34,7 @@ LinkedHashMap  源码：<a href="https://gitee.com/qianwei4712/JDK1.8.0.25-read/
 
 首先，在官方 Java doc 中写到了：
 
-> <font color="red">**这种 map 非常适合建立 LRU 缓存。**</font>
+> <font color="red;font-weight:bold">这种 map 非常适合建立 LRU 缓存。</font>
 
 **那么啥是 `LRU缓存机制` 呢？？？**
 
@@ -49,13 +44,11 @@ LRU 是 Least Recently Used 的缩写，即最近最少使用，是一种常见�
 
 虽然我现在还没开始看代码，**Linked 在 Java 中表示链表** ，这是众所周知的，盲猜应该是：
 
-<font color="red">**在 LinkedHashMap 环境下，当链表达到某个指定长度，put 方法添加新节点时，移除最长没有访问的元素。具体的实现可以是，顺序添加组建链表，当访问某一个元素节点，将该节点移动至末尾，达到长度需要移除时，移除第一个元素节点。**</font>
+<font color="red;font-weight:bold">在 LinkedHashMap 环境下，当链表达到某个指定长度，put 方法添加新节点时，移除最长没有访问的元素。具体的实现可以是，顺序添加组建链表，当访问某一个元素节点，将该节点移动至末尾，达到长度需要移除时，移除第一个元素节点。</font>
 
 好了，到底是不是这样，就从下面开始讲解主要源码。
 
 ![](http://shiva.oss-cn-hangzhou.aliyuncs.com/emo/TIM图片20200603100834.jpg)
-
-
 
 <br>
 
@@ -63,7 +56,7 @@ LRU 是 Least Recently Used 的缩写，即最近最少使用，是一种常见�
 
 `LinkedHashMap` 继承了 **HashMap** ，还实现了 Map 接口（虽然不知道这一步实现有啥意义）。
 
-关于 HashMap ，呃，讲道理的话，都看 `LinkedHashMap` 了，不可能没看过  **HashMap** 。
+关于 HashMap ，呃，讲道理的话，都看 `LinkedHashMap` 了，不可能没看过 **HashMap** 。
 
 但还是贴一下以前写的 HashMap 源码解读：<a href="https://blog.csdn.net/m0_46144826/article/details/107749545" target="_blank">侃晕面试官的 HashMap 源码分析 - 这真不是我吹</a>
 
@@ -123,8 +116,6 @@ static class Node<K,V> implements Map.Entry<K,V> {
 
 因此自带 `Node` 最基础和常用的属性，包括： **hash、key、value** ，再加上继承后新增的 **before、after** 两个前后引用，就可以实现链表节点的基本功能。
 
-
-
 <br>
 
 ### <span id="t22">构造方法</span>
@@ -156,15 +147,13 @@ static class Node<K,V> implements Map.Entry<K,V> {
 >
 > 当然负载因子的计算离不开哈希表长度，所以这两个参数是影响 hashmap 性能的参数。
 
-
-
 <br>
 
 ## <span id="t3">功能实现原理</span>
 
 还是推荐看完 HashMap 源码，对于这些本文基本不会过多：<a href="https://blog.csdn.net/m0_46144826/article/details/107749545" target="_blank">侃晕面试官的 HashMap 源码分析 - 这真不是我吹</a>
 
-> **LinkedHashMap**  没有重写 put 方法，所以添加元素依然是按照 **HashMap** ，哈希桶的方式。
+> **LinkedHashMap** 没有重写 put 方法，所以添加元素依然是按照 **HashMap** ，哈希桶的方式。
 
 ![](http://shiva.oss-cn-hangzhou.aliyuncs.com/emo/TIM截图20200603095608.png)
 
@@ -194,7 +183,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
 输出结果：
 
 ```
-0, 1, 4, 3, 7, 2, 
+0, 1, 4, 3, 7, 2,
 ```
 
 **但是在 HashMap 结构下，这个链表结构是如何实现的呢？**
@@ -225,10 +214,6 @@ static class Node<K,V> implements Map.Entry<K,V> {
 
 ![](http://shiva.oss-cn-hangzhou.aliyuncs.com/emo/哈哈没想到吧.jpg)
 
-
-
-
-
 <br>
 
 ### <span id="t32">在 HashMap 上创建链表</span>
@@ -243,7 +228,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
         // 并且当前最后一个节点指针并不是该节点
         if (accessOrder && (last = tail) != e) {
             // 获得节点以及前后节点的引用
-            LinkedHashMap.Entry<K,V> p = 
+            LinkedHashMap.Entry<K,V> p =
                 (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
             //将下一个节点引用设置为null(意思就是打算放在链表最后)
             p.after = null;
@@ -343,7 +328,7 @@ public class LinkedHashMapTest<K, V> extends LinkedHashMap<K, V>{
 }
 ```
 
-<font color="red">**很简单的实现，设置最大条目，如果当前链表大于最大条目数，就进行删除。当然也可以将最大条目作为构造参数动态设置。**</font>
+<font color="red">很简单的实现，设置最大条目，如果当前链表大于最大条目数，就进行删除。当然也可以将最大条目作为构造参数动态设置。</font>
 
 同样的，在移除节点是，进行了移除回调 `afterNodeRemoval` ，步骤和访问类似。
 
@@ -364,15 +349,13 @@ public class LinkedHashMapTest<K, V> extends LinkedHashMap<K, V>{
     }
 ```
 
-
-
 <br>
 
 ### <span id="t34">get 访问激活节点</span>
 
 `LinkedHashMap` 的官方注释上写到了这么一句：
 
-> <font color="red">在访问有序的链接散列图中，仅使用get查询地图是一种结构修改。</font>
+> <font color="red">在访问有序的链接散列图中，仅使用 get 查询地图是一种结构修改。</font>
 
 所以如果使用了访问模式（accessOrder 为 true），那么在调用 get 时，就会对原有链表进行修改。
 
@@ -399,8 +382,6 @@ public class LinkedHashMapTest<K, V> extends LinkedHashMap<K, V>{
 
 所以如果 get 返回结果为 `null` 时，需要特别关注。
 
-
-
 <br>
 
 ## <span id="te">参考文章</span>
@@ -410,17 +391,3 @@ public class LinkedHashMapTest<K, V> extends LinkedHashMap<K, V>{
 <a href="https://www.pdai.tech/md/java/collection/java-map-LinkedHashMap&LinkedHashSet.html" target="_blank">https://www.pdai.tech/md/java/collection/java-map-LinkedHashMap&LinkedHashSet.html</a>
 
 <a href="http://www.seohuizhou.com/seojiaocheng/12711.html" target="_blank">http://www.seohuizhou.com/seojiaocheng/12711.html</a>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
