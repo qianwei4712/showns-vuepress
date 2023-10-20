@@ -55,3 +55,31 @@
     font-weight: normal;
   }
 }
+
+//在CSSdemo中，做一些弹窗的样式修改
+.cssDemoDetails {
+  .el-dialog__header {
+    display: none !important;
+  }
+  .el-dialog__body {
+    padding: 0;
+  }
+  .cssDemoItem {
+    position: relative;
+  }
+  .copyright {
+    position: relative;
+    left: 15px;
+    bottom: 80px;
+    font-size: 16px;
+    text-shadow: 5px 5px 5px black, 0 0 2px black;
+    color: white;
+
+    .cssClickMe {
+      font-size: 18px;
+      vertical-align: middle;
+      line-height: 50px;
+      font-weight: bold;
+    }
+  }
+}

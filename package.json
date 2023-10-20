@@ -26,10 +26,11 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
-    "@element-plus/icons": "^0.0.11",
+    "@element-plus/icons-vue": "^2.1.0",
     "@vuepress/utils": "2.0.0-beta.67",
     "element-plus": "^2.4.0",
     "file-saver": "^2.0.5",
-    "js-image-compressor": "^2.0.0"
+    "js-image-compressor": "^2.0.0",
+    "masonry-layout": "^4.2.2"
   }
 }
