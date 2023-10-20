@@ -1,6 +1,6 @@
 <template>
   <div class="milestone" style="margin-top: 25px;">
-    <div style="width: 40%;">
+    <div style="max-width: 600px;width: 95%;">
       <el-timeline>
         <el-timeline-item timestamp="2023/10/25" type="primary" hollow="true" placement="top">
           <el-card>
