@@ -38,6 +38,7 @@ export default {
         { label: 'Json数据脱敏', type: 'warning', effect: 'light', target: 'gitee' },
         { label: '异步文件导出搭配 Redis', type: 'danger', effect: 'plain', target: 'gitee' },
         { label: 'word文件读写、模板', type: 'success', effect: 'dark', target: 'yuque', href: "https://www.yuque.com/shiva/bvds0d/sowqsakgcbdp11hg" },
+        { label: '悬浮功能按钮', type: 'info', effect: 'light', target: 'yuque', href: "https://www.yuque.com/shiva/bvds0d/bxe0x4e2vw4g9iex" },
       ]
     }
   },
