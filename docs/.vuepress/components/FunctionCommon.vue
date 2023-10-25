@@ -16,6 +16,7 @@
 import coordinateTrans from "./function/coordinateTrans.vue";
 import imageCompressor from './function/imageCompressor.vue';
 import coordinatePick from './function/coordinatePick.vue';
+import amountInWords from './function/amountInWords.vue';
 
 export default {
   name: "FunctionCommon",
@@ -32,6 +33,7 @@ export default {
         { title: "经纬度坐标系转换", width: "1200px", view: coordinateTrans },
         { title: "高德地图经纬度拾取", width: "1600px", view: coordinatePick },
         { title: "图片压缩", width: "600px", view: imageCompressor },
+        { title: "金额转大写", width: "600px", view: amountInWords },
       ],
     };
   },
