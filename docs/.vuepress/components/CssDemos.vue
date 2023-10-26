@@ -18,13 +18,14 @@ import { withBase } from '@vuepress/client'
 import Masonry from 'masonry-layout';
 let masonry;
 
-import rotationEffect from './cssDemoItem/rotationEffect.vue';
+import rotationEffect from './cssDemoItem/rotationEffect.vue'
 import clickBubble from './cssDemoItem/clickBubble.vue'
 import carouselMenu from './cssDemoItem/carouselMenu.vue'
 import backgroundAnimation from './cssDemoItem/backgroundAnimation.vue'
 import hoverFlip from './cssDemoItem/hoverFlip.vue'
 import telescoping from './cssDemoItem/telescoping.vue'
 import glowingBubbles from './cssDemoItem/glowingBubbles.vue'
+import verticalScroll from './cssDemoItem/verticalScroll.vue'
 
 export default {
   name: "CssDemos",
@@ -38,6 +39,8 @@ export default {
         { title: '渐变背景动画', img: withBase('/css/backgroundAnimation.gif'), width: "1200px", view: backgroundAnimation },
         { title: '发光泡泡特效', img: withBase('/css/glowingBubbles.gif'), width: "1200px", view: glowingBubbles },
         { title: '悬停翻转', img: withBase('/css/hoverFlip.gif'), width: "1200px", view: hoverFlip },
+        { title: '纵向标签滚动', img: withBase('/css/verticalScroll.gif'), width: "800px", view: verticalScroll },
+
       ],
       dialog: {
         title: "", //弹窗标题
