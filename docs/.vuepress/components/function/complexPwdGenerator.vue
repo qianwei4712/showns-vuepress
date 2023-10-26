@@ -101,8 +101,9 @@ export default {
             // 插入特殊符号
             for (let i = 0; i < specialCharsCount; i++) {
                 const randomIndex = Math.floor(Math.random() * specialChars.length);
-                const randomPosition = Math.floor(Math.random() * password.length);
-                password = password.slice(0, randomPosition) + specialChars[randomIndex] + password.slice(randomPosition);
+                //插入特殊符号，不能在0号位置
+                const randomPosition = Math.floor(Math.random() * (password.length - 1)) + 1;
+                password = password.charAt(0) + password.slice(1, randomPosition) + specialChars[randomIndex] + password.slice(randomPosition);
             }
             return password;
         }
