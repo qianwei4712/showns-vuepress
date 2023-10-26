@@ -17,6 +17,7 @@ import coordinateTrans from "./function/coordinateTrans.vue";
 import imageCompressor from './function/imageCompressor.vue';
 import coordinatePick from './function/coordinatePick.vue';
 import amountInWords from './function/amountInWords.vue';
+import complexPwdGenerator from './function/complexPwdGenerator.vue'
 
 export default {
   name: "FunctionCommon",
@@ -34,6 +35,7 @@ export default {
         { title: "高德地图经纬度拾取", width: "1600px", view: coordinatePick },
         { title: "图片压缩", width: "600px", view: imageCompressor },
         { title: "金额转大写", width: "600px", view: amountInWords },
+        { title: "复杂密码生成器", width: "800px", view: complexPwdGenerator },
       ],
     };
   },
