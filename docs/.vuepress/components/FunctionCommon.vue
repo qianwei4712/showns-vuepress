@@ -18,6 +18,7 @@ import imageCompressor from './function/imageCompressor.vue';
 import coordinatePick from './function/coordinatePick.vue';
 import amountInWords from './function/amountInWords.vue';
 import complexPwdGenerator from './function/complexPwdGenerator.vue'
+import qrcodeGeneration from './function/qrcodeGeneration.vue'
 
 export default {
   name: "FunctionCommon",
@@ -36,6 +37,8 @@ export default {
         { title: "图片压缩", width: "600px", view: imageCompressor },
         { title: "金额转大写", width: "600px", view: amountInWords },
         { title: "复杂密码生成器", width: "800px", view: complexPwdGenerator },
+        { title: "二维码生成", width: "1000px", view: qrcodeGeneration },
+
       ],
     };
   },
