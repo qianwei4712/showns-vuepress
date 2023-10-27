@@ -16,7 +16,7 @@
                 </div>
                 <div style="margin-top: 15px;color: gray;">
                     <a href="https://cli.im/text" target="_blank">
-                        更完善的工具： https://cli.im/text
+                        更完善的草料二维码：https://cli.im/text
                     </a>
                 </div>
             </el-col>
@@ -57,7 +57,8 @@ export default {
                 document.getElementById('qrcode').innerHTML = ''
                 let qr = new QRCode('qrcode', {
                     width: that.codeSize, height: that.codeSize,
-                    text: that.textarea
+                    text: that.textarea,
+                    correctLevel: 3
                 })
             })
         },
