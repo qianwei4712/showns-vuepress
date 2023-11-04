@@ -4,7 +4,7 @@ import {
     ElButton, ElIcon, ElDialog, ElTag, ElRadio, ElInput, ElInputNumber,
     ElForm, ElFormItem, ElRow, ElCol, ElDivider, ElUpload, ElSwitch,
     ElTimeline, ElTimelineItem, ElCard, ElCheckbox, ElAvatar, ElPopover,
-    ElMessage, ElMessageBox
+    ElMessage, ElMessageBox, ElTabs
 } from "element-plus"
 
 export default defineClientConfig({
@@ -37,6 +37,8 @@ export default defineClientConfig({
             import("element-plus/es/components/popover/style/css");
             import("element-plus/es/components/message/style/css");
             import("element-plus/es/components/message-box/style/css");
+            import("element-plus/es/components/tabs/style/css");
+
 
         }
         app.component('el-button', ElButton)
@@ -59,5 +61,7 @@ export default defineClientConfig({
         app.component('el-checkbox', ElCheckbox)
         app.component('el-avatar', ElAvatar)
         app.component('el-popover', ElPopover)
+        app.component('el-tabs', ElTabs)
+
     }
 });
