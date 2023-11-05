@@ -71,5 +71,15 @@ export default {
   margin-bottom: 5px;
   cursor: pointer;
 }
+
+.margin-top span:hover {
+  -webkit-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 0 6px #999;
+  box-shadow: 0 0 6px #999;
+  -webkit-transition: all .2s ease-out;
+  transition: all .2s ease-out;
+}
 </style>
   

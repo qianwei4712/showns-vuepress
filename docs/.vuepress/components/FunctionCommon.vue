@@ -71,6 +71,16 @@ export default {
   padding: 0 15px;
 }
 
+.func-item span:hover {
+  -webkit-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 0 6px #999;
+  box-shadow: 0 0 6px #999;
+  -webkit-transition: all .2s ease-out;
+  transition: all .2s ease-out;
+}
+
 .func-item span {
   cursor: pointer;
   margin: 5px 20px 5px 0;
