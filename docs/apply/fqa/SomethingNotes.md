@@ -8,6 +8,7 @@
 - <a href="https://www.yuque.com/shiva/bvds0d/gz9ugq" target="_blank">JS 调用打印机方法</a>
 - <a href="https://www.yuque.com/shiva/bvds0d/szsdl5" target="_blank">JS 前端生成条码工具</a>
 - <a href="https://www.yuque.com/shiva/bvds0d/mnpxt2" target="_blank">ECharts 绘制地图飞线</a>
+- <a href="https://www.yuque.com/shiva/bvds0d/hludpw6nog7v0k40" target="_blank">Html 转图片小工具</a>
 
 ### <span id="t0">其他</span>
 

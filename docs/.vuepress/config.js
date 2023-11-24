@@ -125,6 +125,8 @@ export default defineUserConfig({
                             text: '类型信息、反射', link: '/java/oopbase/RunTimeReflect.html',
                         }, {
                             text: 'Java 8 版本特性', link: '/java/oopbase/Java8NewChara.html',
+                        }, {
+                            text: 'Java 9 至 17 版本更新', link: '/java/oopbase/Jdk8To17Feature.html',
                         },
                     ],
                 }, {
