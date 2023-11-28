@@ -1,1 +1,0 @@
-const a=JSON.parse('{"key":"v-3451598e","path":"/java/collections/CollectionRelationDiagram.html","title":"","lang":"zh-CN","frontmatter":{},"headers":[],"git":{},"filePathRelative":"java/collections/CollectionRelationDiagram.md"}');export{a as data};
