@@ -1,6 +1,6 @@
 ## 路的尽头在哪
 
-<div style="text-align:center">
+<div style="text-align: center;">
 
 ![logo](/docs/.vuepress/public/img/favicon.ico)
 
@@ -19,23 +19,33 @@
 1. 先编译打包到 dist 文件夹，再建一个 release，到时候用来上传
 
 > pnpm run docs:build
+>
 > cd docs/.vuepress/dist
+>
 > mkdir release
 
 2. 因为编译的时候，会删除原来的文件夹，所以要重新初始化 git 仓库
 
 > git init
+>
 > git remote add origin https://gitee.com/qianwei4712/showns-vuepress.git
+>
 > git pull origin release
 
 3. 把原来的仓库拉下来全删掉，把新的复制进去上传
 
 > git rm -rf .
+>
 > git clean -fdx
+>
 > git add .
+>
 > git commit --allow-empty -m "v1.2.1"
+>
 > git branch release
+>
 > git checkout release
+>
 > git push origin release
 
 ## 发展历程等废话
