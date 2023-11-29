@@ -14,7 +14,7 @@
 
 部署在 Gitee Pages，本仓库的 `release` 分支
 
-步骤如下：
+步骤如下（在 VS code 命令行环境下）：
 
 1. 先编译打包到 dist 文件夹，再建一个 release，到时候用来上传
 
@@ -22,6 +22,7 @@
 pnpm run docs:build
 cd docs/.vuepress/dist
 mkdir release
+cd release
 ```
 
 2. 因为编译的时候，会删除原来的文件夹，所以要重新初始化 git 仓库
@@ -37,6 +38,9 @@ git pull origin release
 ```shell
 git rm -rf .
 git clean -fdx
+cd ..
+Get-ChildItem -Exclude release | Move-Item -Destination .\release\
+cd release
 git add .
 git commit --allow-empty -m "v1.2.1"
 git branch release
