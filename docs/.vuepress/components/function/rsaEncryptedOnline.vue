@@ -1,5 +1,5 @@
 <template>
-    <div class="rsaKeyPairGen">
+    <div class="rsaEncryptedOnline">
         <div style="margin-bottom: 5px;">
             <el-button type="success" @click="encryption">公钥加密</el-button>
             <el-button type="danger" @click="decrypt">私钥解密</el-button>
@@ -19,10 +19,10 @@
   
 <script>
 import { ElMessage } from 'element-plus'
-import { KJUR, KEYUTIL } from 'jsrsasign';
+import JSEncrypt from 'jsencrypt';
 
 export default {
-    name: "rsaKeyPairGen",
+    name: "rsaEncryptedOnline",
     data() {
         return {
             miyao: '',
@@ -32,8 +32,9 @@ export default {
     },
     methods: {
         encryption() {
-            const publicKey = KEYUTIL.getKey(this.miyao);
-            this.jieguo = KJUR.crypto.Cipher.encrypt(this.yuanliao, publicKey, 'RSAOAEP')
+            const encryptor = new JSEncrypt();
+            encryptor.setPublicKey(this.miyao);
+            this.jieguo = encryptor.encrypt(this.yuanliao);
             ElMessage({
                 message: '加密成功！',
                 grouping: true,
@@ -41,8 +42,9 @@ export default {
             })
         },
         decrypt() {
-            const keyObj = KEYUTIL.getKey(this.miyao);
-            this.jieguo = KJUR.crypto.Cipher.decrypt(this.yuanliao, keyObj, 'RSAOAEP');
+            const decryptor = new JSEncrypt();
+            decryptor.setPrivateKey(this.miyao);
+            this.jieguo = decryptor.decrypt(this.yuanliao);
             ElMessage({
                 message: '解密成功！',
                 grouping: true,
@@ -53,5 +55,9 @@ export default {
 }
 </script>
   
-<style></style>
+<style>
+.rsaEncryptedOnline textarea::-webkit-scrollbar {
+    display: none;
+}
+</style>
   

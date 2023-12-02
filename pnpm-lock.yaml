@@ -23,6 +23,9 @@ dependencies:
   js-image-compressor:
     specifier: ^2.0.0
     version: 2.0.0
+  jsencrypt:
+    specifier: ^3.3.2
+    version: 3.3.2
   jsrsasign:
     specifier: ^10.9.0
     version: 10.9.0
@@ -1344,6 +1347,10 @@ packages:
       argparse: 1.0.10
       esprima: 4.0.1
     dev: true
+
+  /jsencrypt@3.3.2:
+    resolution: {integrity: sha512-arQR1R1ESGdAxY7ZheWr12wCaF2yF47v5qpB76TtV64H1pyGudk9Hvw8Y9tb/FiTIaaTRUyaSnm5T/Y53Ghm/A==}
+    dev: false
 
   /jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
