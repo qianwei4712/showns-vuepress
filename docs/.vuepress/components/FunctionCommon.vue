@@ -20,6 +20,8 @@ import amountInWords from './function/amountInWords.vue';
 import complexPwdGenerator from './function/complexPwdGenerator.vue'
 import qrcodeGeneration from './function/qrcodeGeneration.vue'
 import transcodeOnline from './function/transcodeOnline.vue'
+import rsaKeyPairGen from "./function/rsaKeyPairGen.vue";
+import rsaEncryptedOnline from "./function/rsaEncryptedOnline.vue";
 
 
 export default {
@@ -41,6 +43,8 @@ export default {
         { title: "复杂密码生成器", width: "800px", view: complexPwdGenerator },
         { title: "二维码生成", width: "1000px", view: qrcodeGeneration },
         { title: "编码转换", width: "1000px", view: transcodeOnline },
+        { title: "RSA密钥对生成", width: "1200px", view: rsaKeyPairGen },
+        { title: "RSA加密/解密在线", width: "1200px", view: rsaEncryptedOnline },
 
       ],
     };
