@@ -2,6 +2,7 @@
 
 - <a href="https://www.yuque.com/shiva/bvds0d/uk9d90" target="_blank">shiro 去除 URL 后缀 jsessionid</a>
 - <a href="https://www.yuque.com/shiva/bvds0d/ugsxnsftg97ent58" target="_blank">docker+kkFileView 简单实现 office 预览</a>
+- <a href="https://www.yuque.com/shiva/bvds0d/ck6mclacwn0uvkgg" target="_blank">Redis 线上环境不允许使用 keys</a>
 
 ### <span id="t0">前端</span>
 
