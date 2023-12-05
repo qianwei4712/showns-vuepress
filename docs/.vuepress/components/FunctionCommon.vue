@@ -22,6 +22,7 @@ import qrcodeGeneration from './function/qrcodeGeneration.vue'
 import transcodeOnline from './function/transcodeOnline.vue'
 import rsaKeyPairGen from "./function/rsaKeyPairGen.vue";
 import rsaEncryptedOnline from "./function/rsaEncryptedOnline.vue";
+import timestampConversion from "./function/timestampConversion.vue";
 
 
 export default {
@@ -45,6 +46,7 @@ export default {
         { title: "编码转换", width: "1000px", view: transcodeOnline },
         { title: "RSA密钥对生成", width: "1200px", view: rsaKeyPairGen },
         { title: "RSA加密/解密在线", width: "1200px", view: rsaEncryptedOnline },
+        { title: "时间戳转换", width: "800px", view: timestampConversion },
 
       ],
     };
