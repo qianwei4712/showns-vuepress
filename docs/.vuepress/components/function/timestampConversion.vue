@@ -3,8 +3,8 @@
         <el-row>
             <el-col :span="2">
                 <el-switch v-model="mode" class="ml-2" inline-prompt
-                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949" active-text="毫秒"
-                    inactive-text="秒" />
+                    style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949" active-text="毫秒" inactive-text="秒"
+                    @change="changeSwitch" />
             </el-col>
             <el-col :span="10">
                 <div style="vertical-align: middle;line-height: 28px;">
@@ -35,8 +35,8 @@
             </div>
             <div style="display: flex;">
                 <div>
-                    <el-date-picker v-model="transTimestamp" type="datetime" placeholder="请选择"
-                        @change="transDateTimeChange" />
+                    <el-date-picker v-model="transTimestamp" type="datetime" placeholder="请选择" @change="transDateTimeChange"
+                        popper-class="timestampConversion-table" />
                 </div>
                 <div v-if="transTimestampResult != null" style="line-height: 32px;margin-left: 25px;">
                     <span style="font-size: 18px;font-weight: bold;cursor: pointer;"
@@ -117,6 +117,12 @@ export default {
         that.transDateTimeChange()
     },
     methods: {
+        //切换开关，秒和毫秒，重新计算
+        changeSwitch() {
+            this.initCurrentTimestamp()
+            this.transDateTimeChange()
+            this.timesTransDateTimeChange()
+        },
         //更新当前时间戳，模式切换秒和毫秒
         initCurrentTimestamp() {
             let time = Date.now();
@@ -129,6 +135,9 @@ export default {
         },
         //时间戳转日期
         timesTransDateTimeChange() {
+            if (this.timesTransDateTime == null) {
+                return false
+            }
             let time = this.mode ? (this.timesTransDateTime * 1) : Math.round(this.timesTransDateTime * 1000)
             this.timesTransDateTimeResult = this.dateFormat(time)
         },
@@ -178,4 +187,8 @@ export default {
     margin-bottom: 5px;
 }
 </style>
-  
+<style>
+.timestampConversion-table table {
+    display: table !important;
+}
+</style> 
