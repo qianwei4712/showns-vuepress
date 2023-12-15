@@ -2,7 +2,7 @@
 
 - [JDK](#jdk)
 - [Niginx](#nginx)
-- [MySql](#mysql)
+- [MySql 5.7](#mysql57)
 - [node.js](#node)
 - [redis](#redis)
 - [activeMQ](#activeMQ)
@@ -15,13 +15,13 @@
 >
 > 本文只是简单介绍，便于以后自己可以直接复制粘贴
 
-### <span id="jdk">JDK安装</span>
+### <span id="jdk">JDK 安装</span>
 
-JDK下载地址：<a href="https://www.oracle.com/technetwork/java/javase/archive-139210.html" target="_blank">https://www.oracle.com/technetwork/java/javase/archive-139210.html</a>
+JDK 下载地址：<a href="https://www.oracle.com/technetwork/java/javase/archive-139210.html" target="_blank">https://www.oracle.com/technetwork/java/javase/archive-139210.html</a>
 
-> 个人喜欢用tar.gz解压的方式
+> 个人喜欢用 tar.gz 解压的方式
 
-1. 下载tar.gz压缩包，上传服务器，解压
+1. 下载 tar.gz 压缩包，上传服务器，解压
 
 2. 配置 profile 环境变量
 
@@ -29,7 +29,7 @@ JDK下载地址：<a href="https://www.oracle.com/technetwork/java/javase/archiv
 vi /etc/profile
 ```
 
-   在末尾添加环境变量
+在末尾添加环境变量
 
 ```Properties
 export JAVA_HOME=/usr/java/jdk1.8.0_65
@@ -38,10 +38,10 @@ export CLASSPATH=.:$JAVA_HOME/lib:$JRE_HOME/lib
 export PATH=$JAVA_HOME/bin:$PATH
 ```
 
-3. 使文件生效 
+3. 使文件生效
 
 ```shell
-source /etc/profile 
+source /etc/profile
 ```
 
 4. 查看是否成功
@@ -50,18 +50,15 @@ source /etc/profile
 java -version
 ```
 
-
-
 <br>
 
 ### <span id="nginx">Nginx 安装</span>
 
+Nginx 下载地址：<a href="http://nginx.org/en/download.html" target="_blank">http://nginx.org/en/download.html</a>
 
-Nginx下载地址：<a href="http://nginx.org/en/download.html" target="_blank">http://nginx.org/en/download.html</a>
-
-> 安装Nginx，并添加SSL模块
+> 安装 Nginx，并添加 SSL 模块
 >
-> 详细安装已经在服务器 - Nginx相关文章内写过了，就不赘述了
+> 详细安装已经在服务器 - Nginx 相关文章内写过了，就不赘述了
 
 1. 安装环境
 
@@ -86,41 +83,38 @@ make install
 ./nginx
 ```
 
-
-
-
 <br>
 
-### <span id="mysql">MySql 安装</span>
+### <span id="mysql57">MySql 5.7 安装</span>
 
-> 直接用命令行安装 MySql 5.7 
+> 直接用命令行安装 MySql 5.7
 
-1. 下载并安装MySQL官方的 Yum Repository
+1. 下载并安装 MySQL 官方的 Yum Repository
 
 ```shell
-wget -i -c http://dev.mysql.com/get/mysql57-community-release-el7-10.noarch.rpm 
+wget -i -c http://dev.mysql.com/get/mysql57-community-release-el7-10.noarch.rpm
 ```
 
 2. 安装 MySql 二进制包
 
 ```shell
-yum -y install mysql57-community-release-el7-10.noarch.rpm 
+yum -y install mysql57-community-release-el7-10.noarch.rpm
 ```
 
-3. 安装 MySql 服务 
+3. 安装 MySql 服务
 
 ```shell
- yum -y install mysql-community-server 
+ yum -y install mysql-community-server
 ```
 
 4. 启动 MySql ，并查看运行状态
 
 ```
-systemctl start mysqld.service 
-systemctl status mysqld.service 
+systemctl start mysqld.service
+systemctl status mysqld.service
 ```
 
-5. 查看默认root权限密码
+5. 查看默认 root 权限密码
 
 ```shell
 grep "password" /var/log/mysqld.log
@@ -129,12 +123,12 @@ grep "password" /var/log/mysqld.log
 6. 根据密码，登陆并修改密码
 
 ```SQL
-mysql -uroot -p 
+mysql -uroot -p
 alter user 'root'@'localhost' identified by 'password';
 FLUSH PRIVILEGES;
 ```
 
-7. 创建新用户，授权，并设置登陆ip
+7. 创建新用户，授权，并设置登陆 ip
 
 ```SQL
 create user 'username'@'%' identified by 'password';
@@ -142,18 +136,16 @@ grant all privileges on *.* to 'username'@'%'  identified by 'password' with gra
 FLUSH PRIVILEGES;
 ```
 
-
-
 <br>
-
 
 ### <span id="node">node.js 安装</span>
 
-首先在<a target="_blank" href="https://nodejs.org/dist/">https://nodejs.org/dist/</a>下载node.js。
+首先在<a target="_blank" href="https://nodejs.org/dist/">https://nodejs.org/dist/</a>下载 node.js。
 
-例如：node-v12.16.1-linux-x64.tar.gz 。是已经编译好的文件，在bin文件夹中已经存在node以及npm，建立软链接，可以直接使用。
+例如：node-v12.16.1-linux-x64.tar.gz 。是已经编译好的文件，在 bin 文件夹中已经存在 node 以及 npm，建立软链接，可以直接使用。
 
 1. 下载，上传到服务器解压，重命名文件夹
+
 ```shell
 tar  xf node-v12.16.1-linux-x64.tar.gz -C /usr/local/
 cd /usr/local/
@@ -161,6 +153,7 @@ mv node-v12.16.1-linux-x64/ nodejs
 ```
 
 2. 创建软链接
+
 ```shell
 ln -s /usr/local/nodejs/bin/node /usr/local/bin
 ln -s /usr/local/nodejs/bin/npm /usr/local/bin
@@ -206,11 +199,11 @@ echo "source /opt/rh/devtoolset-9/enable" >>/etc/profile
 
 ### <span id="activeMQ">activeMQ 安装</span>
 
-activemq 需要JDK环境，这个提前装。activemq 对 JDK 有版本要求，也许需要修改 env 文件指定jdk，用以下参数指定：
+activemq 需要 JDK 环境，这个提前装。activemq 对 JDK 有版本要求，也许需要修改 env 文件指定 jdk，用以下参数指定：
 
 > JAVA_HOME="/opt/jdk1.8"
 
-然后下载 <a target="_blank" href="https://activemq.apache.org/components/classic/download/">https://activemq.apache.org/components/classic/download/</a> 
+然后下载 <a target="_blank" href="https://activemq.apache.org/components/classic/download/">https://activemq.apache.org/components/classic/download/</a>
 
 上传到服务器，解压，然后可以进入 bin 目录下直接启动：
 
@@ -252,8 +245,7 @@ admin: admin, admin
 user: user, user
 ```
 
-注意结构是  `用户名 ： 密码， 角色数组`
-
+注意结构是 `用户名 ： 密码， 角色数组`
 
 <br/>
 
@@ -269,7 +261,7 @@ vi /etc/profile
 M2_HOME=/usr/local/apache-maven-3.6.0
 export PATH=${M2_HOME}/bin:${PATH}
 
-source /etc/profile 
+source /etc/profile
 
 mvn -v
 ```
@@ -327,8 +319,7 @@ processManagement:
 # network interfaces
 net:
   port: 27017
-  bindIp: 0.0.0.0  # Listen to local interface only, comment to listen on all interfaces.
-
+  bindIp: 0.0.0.0 # Listen to local interface only, comment to listen on all interfaces.
 ```
 
 启动，设置开机启动

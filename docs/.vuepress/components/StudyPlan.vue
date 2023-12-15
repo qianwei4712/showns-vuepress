@@ -6,6 +6,7 @@
     <h3>2023（私活干多了，没时间写）</h3>
     <el-checkbox :border="true" checked="checked" disabled>Auto.JS</el-checkbox>
     <el-checkbox :border="true" checked="checked" disabled>VuePress2</el-checkbox>
+    <el-checkbox :border="true" checked="checked" disabled>抽空结个婚</el-checkbox>
 
     <br>
     <h3>2022</h3>
