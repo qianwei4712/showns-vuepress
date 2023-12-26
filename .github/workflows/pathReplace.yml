@@ -1,0 +1,26 @@
+name: path replace
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  remove_string:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: path replace
+        run: |
+          sed -i 's/\/showns-vuepress//g' docs/.vuepress/config.js
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "qianwei4712@163.com"
+          git config --local user.name "shiva"
+          git add docs/.vuepress/config.js
+          git commit -m "Remove /showns-vuepress from config.js"
+          git push
