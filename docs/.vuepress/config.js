@@ -19,9 +19,9 @@ export default defineUserConfig({
     lang: 'zh-CN',
     title: '路的尽头在哪',
     description: '做人最重要的是开心',
-    base: '/showns-vuepress/',
+    base: '/',
     head: [[
-        'link', { rel: 'icon', href: '/showns-vuepress/img/favicon.ico' }
+        'link', { rel: 'icon', href: '/img/favicon.ico' }
     ]],
 
     // 默认主题配置
