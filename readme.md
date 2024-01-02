@@ -10,11 +10,21 @@
 <a href="https://qianwei4712.gitee.io/showns-vuepress/chest/" target="_blank">链接：路的尽头在哪</a>
 </span>
 
-## 当前部署方式
+## 当前部署方式 1 : vercel 静态服务器
+
+[Vercel.com](https://Vercel.com) 提供了一种简单而高效的方式来部署静态网站。它可以自动化部署 Github 仓库项目，而且它是免费的（海外服务器还不用备案）
+
+![](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20240102230028.png)
+
+## 当前部署方式 2 : Gitee Pages
 
 部署在 Gitee Pages，本仓库的 `release` 分支
 
 步骤如下（在 VS code 命令行环境下）：
+
+> 在打包之前先把 config.js 中的 base、head 参数，添加 `/showns-vuepress` 路径；
+>
+> 因为在 Github 上是根目录发布；在 Gitee Pages 里需要再加个子路径
 
 1. 先编译打包到 dist 文件夹，再建一个 release，到时候用来上传
 
