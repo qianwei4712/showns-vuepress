@@ -10,13 +10,15 @@
 <a href="https://qianwei4712.gitee.io/showns-vuepress/chest/" target="_blank">链接：路的尽头在哪</a>
 </span>
 
-## 当前部署方式 1 : vercel 静态服务器
+## 部署方式 1 : vercel 静态服务器
 
 [Vercel.com](https://Vercel.com) 提供了一种简单而高效的方式来部署静态网站。它可以自动化部署 Github 仓库项目，而且它是免费的（海外服务器还不用备案）
 
-![](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20240102230028.png)
+![主页](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20240102230028.png)
 
-## 当前部署方式 2 : Gitee Pages
+![部署命令](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20240103091906.png)
+
+## 部署方式 2 : Gitee Pages
 
 部署在 Gitee Pages，本仓库的 `release` 分支
 
