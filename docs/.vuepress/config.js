@@ -349,6 +349,8 @@ export default defineUserConfig({
                         }, {
                             text: 'Linux 常用命令', link: '/deploy/server/LinuxCommonCommand.html',
                         }, {
+                            text: 'Linux 常用定时脚本文件', link: '/deploy/server/CommonShellScript.html',
+                        }, {
                             text: 'nginx 域名转发并配置SSL证书', link: '/deploy/server/NginxBindPortWithDomain.html',
                         }, {
                             text: 'docker 安装及基本用法', link: '/deploy/server/DockerInstall.html',
