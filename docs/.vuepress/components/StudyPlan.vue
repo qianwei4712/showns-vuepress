@@ -3,10 +3,12 @@
     😀😁😂😃😄😅😆😉😊😋😎😍😘😗😙😚😇😐😑😶😏😣😥😮😯😪😫😴😌😛😜😝😒😓😔😕😲😷😖😞😟😤😢😭😦😧😨😬😰😱😳😵😡😠😈👿👹👺💀☠👻👽
 
     <br>
-    <h3>2024</h3>
+    <h3>2024(搞量化去了, 这些写了也没法赚钱)</h3>
+    <el-checkbox :border="true" checked="checked" disabled>Python Web自动化</el-checkbox>
+    <el-checkbox :border="true" checked="checked" disabled>C# PC自动化</el-checkbox>
 
     <br>
-    <h3>2023（私活干多了，没时间写）</h3>
+    <h3>2023(私活干多了, 没时间写)</h3>
     <el-checkbox :border="true" checked="checked" disabled>Auto.JS</el-checkbox>
     <el-checkbox :border="true" checked="checked" disabled>VuePress2</el-checkbox>
     <el-checkbox :border="true" checked="checked" disabled>抽空结个婚</el-checkbox>

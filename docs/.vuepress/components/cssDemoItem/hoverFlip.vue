@@ -73,7 +73,7 @@
         </div>
     </div>
 </template>
-  
+
 <script>
 export default {
     name: "hoverFlip",
@@ -91,7 +91,7 @@ export default {
     },
 }
 </script>
-  
+
 <style lang="scss" scoped>
 * {
     /* 初始化 */
@@ -208,4 +208,3 @@ export default {
     transform: translateY(0) rotateX(0);
 }
 </style>
-  

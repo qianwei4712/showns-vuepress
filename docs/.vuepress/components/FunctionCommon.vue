@@ -11,7 +11,7 @@
     </el-dialog>
   </div>
 </template>
-  
+
 <script>
 import coordinateTrans from "./function/coordinateTrans.vue";
 import imageCompressor from './function/imageCompressor.vue';
@@ -67,7 +67,7 @@ export default {
   },
 };
 </script>
-  
+
 <style scoped>
 .functionCommon {
   margin: 25px 0;
@@ -92,4 +92,3 @@ export default {
   margin: 5px 20px 5px 0;
 }
 </style>
-  

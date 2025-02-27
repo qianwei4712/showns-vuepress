@@ -11,7 +11,7 @@
 
   </div>
 </template>
-  
+
 <script>
 import { withBase } from '@vuepress/client'
 
@@ -56,7 +56,7 @@ export default {
   }
 }
 </script>
-  
+
 <style scoped>
 .applyCase {
   margin: 10px 0;
@@ -82,4 +82,3 @@ export default {
   transition: all .2s ease-out;
 }
 </style>
-  
