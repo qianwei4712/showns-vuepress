@@ -130,7 +130,7 @@ cafe babe 0000 0034 0022 0a00 0600 1409
 
 详细的就算了，看看主要结构，从大佬那扒来的图：
 
-![java-jvm-class-2](https://img-blog.csdnimg.cn/20200922191856568.png)
+![20200922191856568](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/20200922191856568.png)
 
 <br>
 
