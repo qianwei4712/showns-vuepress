@@ -49,7 +49,7 @@ export default {
           window.open(item.href, '_blank');
           break;
         default:
-          window.open(withBase("/chest/solutions/" + item.label + ".html"), '_self');
+          window.open(withBase("/chest/solutions/" + item.label + ".html"), '_blank');
           break
       }
     }
