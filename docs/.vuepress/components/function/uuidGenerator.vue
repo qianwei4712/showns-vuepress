@@ -17,8 +17,7 @@
             </div>
             <el-divider></el-divider>
             <div>
-                <div v-for="item in resultArray" :key="item"
-                    style="font-size: 18px;text-align: center;padding-top: 15px;cursor: pointer;" @click="copy(item)">
+                <div v-for="item in resultArray" :key="item" class="uuid-result" @click="copy(item)">
                     {{ item }}
                 </div>
             </div>
@@ -77,4 +76,13 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.uuid-result {
+    font-size: 18px;
+    text-align: center;
+    padding-top: 10px;
+    cursor: pointer;
+    color: #409EFF;
+    font-family: math
+}
+</style>
