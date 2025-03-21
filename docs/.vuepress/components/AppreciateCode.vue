@@ -8,7 +8,7 @@
           </div>
         </template>
         <template #default>
-          <div style="">
+          <div style="border-radius: 50%">
             <el-avatar :size="150" :src="src" />
           </div>
         </template>
@@ -41,6 +41,10 @@ export default {
   --el-popover-bg-color: none !important;
   margin-bottom: 150px;
   margin-right: 25px;
+}
+
+.apperciate-popper.el-popper.is-light {
+  background: none
 }
 </style>
 <style scoped>

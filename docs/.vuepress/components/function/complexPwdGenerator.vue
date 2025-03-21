@@ -30,7 +30,6 @@
             <el-col :span="12">
                 <div style="text-align: center;">
                     <el-button type="success" @click="generator">生成密码</el-button>
-
                 </div>
                 <div style="font-size: 22px;text-align: center;padding-top: 30px;cursor: pointer;" @click="copy">
                     {{ result }}
@@ -40,7 +39,7 @@
 
     </div>
 </template>
-    
+
 <script>
 import { ElMessage } from 'element-plus'
 
@@ -110,7 +109,7 @@ export default {
     }
 }
 </script>
-    
+
 <style scoped>
 .option-item {
     display: flex;
@@ -123,4 +122,3 @@ export default {
     line-height: 30px;
 }
 </style>
-    

@@ -3,6 +3,10 @@
     😀😁😂😃😄😅😆😉😊😋😎😍😘😗😙😚😇😐😑😶😏😣😥😮😯😪😫😴😌😛😜😝😒😓😔😕😲😷😖😞😟😤😢😭😦😧😨😬😰😱😳😵😡😠😈👿👹👺💀☠👻👽
 
     <br>
+    <h3>2025(量化搞不出来, 闲着没事继续写把)</h3>
+    <el-checkbox :border="true" checked="checked" disabled>抽空生个娃</el-checkbox>
+
+    <br>
     <h3>2024(搞量化去了, 这些写了也没法赚钱)</h3>
     <el-checkbox :border="true" checked="checked" disabled>Python Web自动化</el-checkbox>
     <el-checkbox :border="true" checked="checked" disabled>C# PC自动化</el-checkbox>

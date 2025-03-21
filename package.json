@@ -34,6 +34,7 @@
     "jsencrypt": "^3.3.2",
     "jsrsasign": "^10.9.0",
     "masonry-layout": "^4.2.2",
-    "qrcode2": "^1.2.3"
+    "qrcode2": "^1.2.3",
+    "uuid": "^11.1.0"
   }
 }
