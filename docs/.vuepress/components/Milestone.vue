@@ -4,8 +4,13 @@
       <el-timeline>
         <el-timeline-item timestamp="2023/10/25" type="primary" hollow="true" placement="top">
           <el-card>
-            觉得原有站点的缺陷比较多，改用 Vuepress2 重新开发：<a href="https://gitee.com/qianwei4712/showns-vuepress" target="_blank"
-              class="origin">Gitee仓库地址</a>
+            觉得原有站点的缺陷比较多，改用 Vuepress2 重新写，仓库地址：
+            <a href="https://gitee.com/qianwei4712/showns-vuepress"
+               target="_blank"
+               class="origin">Gitee</a>、
+            <a href="https://github.com/qianwei4712/showns-vuepress"
+               target="_blank"
+               class="origin">GitHub</a>
           </el-card>
         </el-timeline-item>
         <el-timeline-item timestamp="2020/01/01 至 2022/11/25" color="#0bbd87" placement="top">
@@ -15,8 +20,9 @@
         </el-timeline-item>
         <el-timeline-item timestamp="2019/12/28" color="#e20000" placement="top">
           <el-card>
-            遵循 <span style="color: red;font-weight: bold">Apache LICENSE 2.0</span> 协议，源码开放，<a
-              href="https://gitee.com/qianwei4712/showns" target="_blank" class="origin">旧版本：Gitee仓库地址</a>
+            遵循 <span style="color: red;font-weight: bold">Apache LICENSE 2.0</span> 协议，源码开放，旧版本仓库地址：
+            <a href="https://gitee.com/qianwei4712/showns" target="_blank" class="origin">Gitee</a>、
+            <a href="https://github.com/qianwei4712/showns" target="_blank" class="origin">GitHub</a>
           </el-card>
         </el-timeline-item>
         <el-timeline-item timestamp="2019/11/14" placement="top">
@@ -26,7 +32,8 @@
         </el-timeline-item>
         <el-timeline-item timestamp="2019/11/6" placement="top">
           <el-card>
-            工作需要, 开始学习Vue.js, 收到 <span style="color: red;font-weight: bold;">@pdai</span> 大佬启发, 照虎画猫也建了一个站点
+            工作需要, 开始学习Vue.js, 收到 <span style="color: red;font-weight: bold;">@pdai</span> 大佬启发,
+            照虎画猫也建了一个站点
           </el-card>
         </el-timeline-item>
       </el-timeline>
@@ -42,13 +49,11 @@
 export default {
   name: "Milestone",
   data() {
-    return {
-    }
+    return {}
   },
   created() {
   },
-  methods: {
-  },
+  methods: {},
 }
 </script>
 

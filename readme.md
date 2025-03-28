@@ -7,7 +7,7 @@
 </div>
 
 <span style="font-weight:bold;font-size:18px">
-<a href="https://qianwei4712.gitee.io/showns-vuepress/chest/" target="_blank">链接：路的尽头在哪</a>
+<a href="https://www.wywaa.xyz/chest/" target="_blank">在线链接：路的尽头在哪</a>
 </span>
 
 ## 部署方式 1 : vercel 静态服务器
@@ -66,4 +66,4 @@ git push origin release
 2. 19-22 年，陆续在上面添加了上百篇学记笔记和踩坑的记录，后来比较忙么时间搞了
 3. 到 2023 年发现，那个站太简陋了，所以打算重新搞一个。就有了本仓库
 
-> 历史仓库，19-22 年的 原始文档上传仓库入口：[旧版本，Gitee 仓库地址](https://gitee.com/qianwei4712/showns)
+> 历史仓库，19-22 年的 原始文档上传仓库入口，旧版本仓库地址： [Gitee](https://gitee.com/qianwei4712/showns) 、[GitHub](https://github.com/qianwei4712/showns)
