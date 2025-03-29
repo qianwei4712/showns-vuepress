@@ -3,8 +3,8 @@
     🩹🐻‍❄️🩲✨💌🕳️💣🛀🛌🧱🌡️🎊🎉🎈🧧💎🖨️⚙️💥🙊🐱🦊🐺🦄🐴🐽🐸🐊🐢🐍🐳🐡🦈🐛🌸🌳🌍🌐☀☁🌧️🌈🌊💧🩸👒👑👓🧳🧖🎅👰‍🤵‍👨‍🙋👵🧠🦷👂👀👅👄💪🤲
     <br>
     <div class="margin-top">
-      <el-tag v-for="item in items" size="large" :key="item.label" :effect="item.effect" :color="item.color"
-              :type="item.type" @click="openTab(item)">
+      <el-tag v-for="(item, index) in items" size="large" :key="item.label" :effect="randomEffect(index)"
+              :type="randomType(index)" @click="openTab(item)">
         {{ item.label }}
       </el-tag>
     </div>
@@ -19,75 +19,59 @@ export default {
   name: "ApplyCase",
   data() {
     return {
+      types: ["", "success", "info", "warning", "danger"],
+      effects: ["", "dark", "light", "plain"],
       items: [
-        // type: success / info / warning / danger
-        // effect: dark / light / plain
-        {label: '修改内容前后变动日志', type: 'success', effect: 'dark'},
-        {label: '重复读取 request 流数据', type: 'danger', effect: 'light'},
-        {label: 'jenkins 常用 shell 命令', type: 'warning', effect: 'dark'},
+        {label: '修改内容前后变动日志', target: 'self'},
+        {label: '重复读取 request 流数据', target: 'self'},
+        {label: 'jenkins 常用 shell 命令', target: 'self'},
         {
           label: 'SQL优化总结',
-          type: 'success',
-          effect: 'light',
           target: 'yuque',
           href: 'https://www.yuque.com/shiva/ypnk5i/lvsbpw'
         },
-        {label: '拦截重复请求', type: 'info', effect: 'dark'},
+        {label: '拦截重复请求', target: 'self'},
         {
           label: 'CentOS硬盘挂载',
-          type: 'warning',
-          effect: 'plain',
           target: 'yuque',
           href: 'https://www.yuque.com/shiva/bvds0d/llbgot'
         },
-        {label: '线上服务CPU跑满', type: 'danger', effect: 'dark'},
+        {label: '线上服务CPU跑满', target: 'self'},
         {
           label: 'Vue.js 学习随笔',
-          type: 'success',
-          effect: 'dark',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/fgnv9d/wetses"
         },
         {
           label: 'Netty 权威指南',
-          type: 'danger',
-          effect: 'plain',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/lct37n"
         },
-        {label: '发布订阅机制', type: 'info', effect: 'light'},
+        {label: '发布订阅机制', target: 'self'},
         {
           label: '数据库文档导出',
-          type: 'danger',
-          effect: 'light',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/bvds0d/nw61t1"
         },
-        {label: '图片拼接合成', type: 'success', effect: 'plain'},
+        {label: '图片拼接合成', target: 'self'},
         {
           label: 'POI海量数据导出',
-          type: 'info',
-          effect: 'dark',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/bvds0d/wbsirl"
         },
-        {label: 'Json数据脱敏', type: 'warning', effect: 'light'},
-        {label: '异步文件导出搭配 Redis', type: 'danger', effect: 'plain'},
+        {label: 'Json数据脱敏', target: 'self'},
+        {label: '异步文件导出搭配 Redis', target: 'self'},
         {
           label: 'word文件读写、模板',
-          type: 'success',
-          effect: 'dark',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/bvds0d/sowqsakgcbdp11hg"
         },
         {
           label: '悬浮功能按钮',
-          type: 'info',
-          effect: 'light',
           target: 'yuque',
           href: "https://www.yuque.com/shiva/bvds0d/bxe0x4e2vw4g9iex"
         },
-        {label: 'Python+selenium 自动化', type: 'warning', effect: 'plain'},
+        {label: 'python使用selenium自动化', target: 'self'},
       ]
     }
   },
@@ -101,7 +85,13 @@ export default {
           window.open(withBase("/chest/solutions/" + item.label + ".html"), '_blank');
           break
       }
-    }
+    },
+    randomType(index) {
+      return this.types[index % 5];
+    },
+    randomEffect(index) {
+      return this.effects[index % 4];
+    },
   }
 }
 </script>
