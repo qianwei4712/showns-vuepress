@@ -1,10 +1,14 @@
+### 文档与准备
+
+`2025.03.28`
+
 > Python + chromedriver + Chrome + selenium，进行web自动化操作。
 
 **chromedriver 和 chrome 版本一定要对应**，先看看效果
 
 ![python-driver执行效果](https://shiva.oss-cn-hangzhou.aliyuncs.com/picture-master/202204/python-driver%E6%89%A7%E8%A1%8C%E6%95%88%E6%9E%9C.gif)
 
-### 文档与准备
+
 
 1. [驱动下载：ChromeDriver Latest Releases Versions Downloads](https://getwebdriver.com/chromedriver)
    ，需要翻墙，驱动和对应版本的chrome都可以下载；
