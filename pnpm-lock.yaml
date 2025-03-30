@@ -27,8 +27,8 @@ dependencies:
     specifier: ^3.3.2
     version: 3.3.2
   jsrsasign:
-    specifier: ^10.9.0
-    version: 10.9.0
+    specifier: 11.0.0
+    version: 11.0.0
   masonry-layout:
     specifier: ^4.2.2
     version: 4.2.2
@@ -1362,8 +1362,8 @@ packages:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  /jsrsasign@10.9.0:
-    resolution: {integrity: sha512-QWLUikj1SBJGuyGK8tjKSx3K7Y69KYJnrs/pQ1KZ6wvZIkHkWjZ1PJDpuvc1/28c1uP0KW9qn1eI1LzHQqDOwQ==}
+  /jsrsasign@11.0.0:
+    resolution: {integrity: sha512-BtRwVKS+5dsgPpAtzJcpo5OoWjSs1/zllSBG0+8o8/aV0Ki76m6iZwHnwnsqoTdhfFZDN1XIdcaZr5ZkP+H2gg==}
     dev: false
 
   /kind-of@6.0.3:
