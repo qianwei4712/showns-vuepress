@@ -4,6 +4,7 @@
 
     <br>
     <h3>2025(量化搞不出来, 闲着没事继续写把)</h3>
+    <el-checkbox :border="true" checked="checked" disabled>redis分布式锁</el-checkbox>
     <el-checkbox :border="true" checked="checked" disabled>抽空生个娃</el-checkbox>
 
     <br>

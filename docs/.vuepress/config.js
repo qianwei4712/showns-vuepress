@@ -295,6 +295,8 @@ export default defineUserConfig({
                             text: 'Quartz - 任务调度框架整合使用', link: '/apply/frame/QuartzBaseApply.html',
                         }, {
                             text: 'Activiti - Workflow 最佳实战案例', link: '/apply/frame/Activiti7Workflow.html',
+                        }, {
+                            text: 'Redisson - 分布式锁原理与简单使用', link: '/apply/frame/DistributedLockAndRedisson.html',
                         },
                     ],
                 }, {
