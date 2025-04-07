@@ -72,6 +72,7 @@ export default {
           href: "https://www.yuque.com/shiva/bvds0d/bxe0x4e2vw4g9iex"
         },
         {label: 'python使用selenium自动化', target: 'self'},
+        {label: 'SSE流式输出', target: 'self'},
       ]
     }
   },
