@@ -22,6 +22,9 @@ export default {
       types: ["", "success", "info", "warning", "danger"],
       effects: ["", "dark", "light", "plain"],
       items: [
+        {label: 'Tips：Stream', target: 'self'},
+        {label: 'Tips：SQL', target: 'self'},
+        {label: 'Tips：JS', target: 'self'},
         {label: '修改内容前后变动日志', target: 'self'},
         {label: '重复读取 request 流数据', target: 'self'},
         {label: 'jenkins 常用 shell 命令', target: 'self'},
